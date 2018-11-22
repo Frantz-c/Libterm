@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2018/11/11 10:29:14 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2018/11/22 16:12:23 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2018/11/22 18:08:36 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -69,8 +69,8 @@ static int		autocomplete_list(char *buf, int size)
 		goto ret_0;
 	ft_strncpy(slash_pos, menu[n_path], eql);
 	ft_free2d(menu);
-	load_cursor();
 	display_cursor();
+	load_cursor();
 
 	closedir(dir);
 	return (1);
@@ -102,7 +102,7 @@ static int		autocomplete(char *buf, int size, int path_list)
 		return (0);
 
 	if (path_list)
-		menu = malloc(sizeof(char*) * 30); // warning
+		menu = malloc(sizeof(char*) * 50); // warning
 	search_len = ft_strlen(slash_pos);
 	while ((d = readdir(dir)) != NULL)
 	{
@@ -138,7 +138,6 @@ static int		autocomplete(char *buf, int size, int path_list)
 		if (eql >= size - (slash_pos - buf))
 			goto ret_0;
 		ft_strncpy(slash_pos, menu[n_path], eql);
-		ft_free2d(menu);
 		load_cursor();
 		display_cursor();
 		goto ret_1;
@@ -162,10 +161,14 @@ static int		autocomplete(char *buf, int size, int path_list)
 	}
 
 ret_1:
+	if (path_list)
+		ft_free2d(menu);
 	closedir(dir);
 	return (1);
 
 ret_0:
+	if (path_list)
+		ft_free2d(menu);
 	closedir(dir);
 	return (0);
 }
@@ -379,28 +382,39 @@ extern void		display_menu_lcm(const char **list, int size, t_menu *opt, int *t)
 
 extern int		display_menu_list(const char **list, int size, const char *s_color, const char *o_color)
 {
-	int		selected = 0;
-	t_key	c;
-	int		i;
+	int			selected = 0;
+	t_key		c;
+	int			i;
+	int			list_x, list_y;
+	int			x_print;
+	int			y_print;
+	int			list_h;
 
+	get_cursor_position(&list_x, &list_y);
+	list_h = terminal_h - list_y;
 	make_terminal_raw(1);
 	while (1)
 	{
+		x_print = list_x;
 		/*
-		 ** print menu with current choice highlighting
-		 */
+		** print menu with current choice highlighting
+		*/
 		i = 0;
 		ft_puts(o_color);
 		while (list[i])
 		{
+			y_print = (i != 0) ? list_y + ((i + 1) % list_h) : list_y;
+			if (((i + 1) % list_h) == 0)
+				x_print += 40;
+
 			if (i == selected)
 			{
 				ft_puts(s_color);
-				ft_puts(list[i]);
+				xyprint(list[i], x_print, y_print);
 				ft_puts(o_color);
 			}
 			else
-				ft_puts(list[i]);
+				xyprint(list[i], x_print, y_print);
 			i++;
 		}
 
@@ -411,10 +425,12 @@ extern int		display_menu_list(const char **list, int size, const char *s_color, 
 		if		(c == KEY_ENTER)	break ;
 		else if (c == KEY_UP)		selected = (selected == 0) ? size - 1: selected - 1;
 		else if (c == KEY_DOWN)		selected = (selected == size - 1) ? 0: selected + 1;
-		move_cursor(KEY_UP, size);
+		else if (c == KEY_LEFT)		selected = (selected > list_h) ? selected - list_h: (selected % (size % list_h)) + (size - (size % list_h));
+		else if (c == KEY_RIGHT)	selected = (selected < size - list_h) ? selected + list_h: selected % list_h;
+		//move_cursor_xy(list_x, list_y);
 	}
-	size++;
-	clear_line_and_move_up(size);
+	move_cursor_xy(list_x, list_y + list_h);
+	clear_line_and_move_up2(list_h + 1);
 	make_terminal_raw(0);
 	return (selected);
 }
@@ -429,21 +445,22 @@ extern void		xyprint(const char *s, int x, int y)
 {
 	const size_t	length = ft_strnlen(s, terminal_w - x);
 
-	store_cursor();
+	//store_cursor();
 	move_cursor_xy(x, y);
 	write(1, s, length);
-	load_cursor();
+	//load_cursor();
 }
 
 extern void		xyprint_color(const char *s, int x, int y, const char *color)
 {
 	const size_t	length = ft_strnlen(s, terminal_w - x);
 
-	store_cursor();
+	//store_cursor();
 	move_cursor_xy(x, y);
 	ft_puts(color);
 	write(1, s, length);
-	write(1, "\e[0m\e8", 6);
+	write(1, "\e[0m", 4);
+	//write(1, "\e[0m\e8", 6);
 }
 
 extern void		print_animation(char **img, unsigned int n_lines, unsigned int interval)
