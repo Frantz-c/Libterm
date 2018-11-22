@@ -1,5 +1,5 @@
 NAME = libterm.a
-CC = gcc -Wall -Wextra -Werror -O3
+CC = gcc -Wall -O3
 FILES = libterm.o
 
 all: $(NAME)
