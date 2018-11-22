@@ -1,6 +1,5 @@
-PATH = ./
 NAME = libft.a
-CC = gcc -Wall -Werror -Wextra -O3 
+CC = gcc -O3 
 FILES = ft_atoi.o\
 ft_free2d.o\
 ft_atol.o\
@@ -79,7 +78,7 @@ ft_toupper.o
 
 all: $(NAME)
 
-$(NAME): $(PATH)$(FILES)
+$(NAME): $(FILES)
 	@ar rc $@ $^ 
 	@ranlib $@
 
@@ -87,7 +86,7 @@ $(NAME): $(PATH)$(FILES)
 	@$(CC) -c $<
 
 clean:
-	@/bin/rm -f $(PATH)$(FILES)
+	@/bin/rm -f $(FILES)
 
 fclean: clean
 	@/bin/rm -f $(NAME)

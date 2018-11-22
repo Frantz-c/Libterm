@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2018/11/11 10:29:14 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2018/11/21 21:11:49 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2018/11/22 11:30:06 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -56,17 +56,14 @@ static int		autocomplete(char *buf, int size)
 	if ((dir = opendir(path)) == NULL)
 		return (0);
 
-
 	search_len = ft_strlen(slash_pos);
 	while ((d = readdir(dir)) != NULL)
 	{
 		if (*d->d_name == '.')	continue ;
 		if (!candidat)
 		{
-			if (ft_contained(d->d_name, slash_pos)) {
-				eql = ft_streqlen(slash_pos, d->d_name);
+			if (ft_contained(d->d_name, slash_pos))
 				candidat = d->d_name;
-			}
 		}
 		else if (ft_contained(d->d_name, slash_pos))
 		{
@@ -188,7 +185,7 @@ extern void	advanced_user_input(char *buf, int size, int flag)
 		{
 			move_cursor_left();
 			if (curs == len) {
-				buf[len] = '\0';
+				buf[len - 1] = '\0';
 				ft_putc(KEY_SPACE);
 				move_cursor_left();
 			}
