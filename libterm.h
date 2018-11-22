@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2018/11/11 22:19:14 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2018/11/21 20:47:29 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2018/11/22 15:42:02 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -43,6 +43,7 @@ int				terminal_h;
 #define clear_line_and_move_down(n_lines)	int zzz = n_lines; while (zzz--) write(1, "\e[K\e[B", 6);
 
 #define PATH_AUTOCOMP	1
+#define PATH_LIST		2
 
 #define KEY_UP			128U
 #define KEY_DOWN		129U

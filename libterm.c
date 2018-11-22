@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2018/11/11 10:29:14 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2018/11/22 11:30:06 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2018/11/22 16:12:23 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -37,7 +37,50 @@ static int		ft_contained(char *s1, char *s2)
 	return (*s2 == 0) ? 1 : 0;
 }
 
-static int		autocomplete(char *buf, int size)
+static int		autocomplete_list(char *buf, int size)
+{
+	DIR				*dir;
+	struct dirent	*d;
+	char			*slash_pos;
+	int				eql = 0x7fffffff;
+	int				n_path = 0;
+	char			**menu = NULL;
+
+	if ((slash_pos = ft_strrchr(buf, '/')) == NULL)
+		return (0);
+	slash_pos++;
+	if ((dir = opendir(buf)) == NULL)
+		return (0);
+
+	menu = malloc(sizeof(char*) * 200); // warning
+	while ((d = readdir(dir)) != NULL)
+	{
+		if (*d->d_name == '.')	continue ;
+		menu[n_path++] = ft_strjoin(d->d_name, "\r\n");
+	}
+	menu[n_path] = NULL;
+
+	store_cursor();
+	hide_cursor();
+	write(1, "\n", 1);
+	n_path = display_menu_list((const char **)menu, n_path, RED1, WHIT0);
+	eql = ft_strlen(menu[n_path]) - 2;
+	if (eql >= size - (slash_pos - buf))
+		goto ret_0;
+	ft_strncpy(slash_pos, menu[n_path], eql);
+	ft_free2d(menu);
+	load_cursor();
+	display_cursor();
+
+	closedir(dir);
+	return (1);
+
+ret_0:
+	closedir(dir);
+	return (0);
+}
+
+static int		autocomplete(char *buf, int size, int path_list)
 {
 	DIR				*dir;
 	struct dirent	*d;
@@ -48,6 +91,8 @@ static int		autocomplete(char *buf, int size)
 	int				new_eql = 0;
 	int				mult_cand = 0;
 	int				search_len;
+	int				n_path = 0;
+	char			**menu = NULL;
 
 	if ((slash_pos = ft_strrchr(buf, '/')) == NULL)
 		return (0);
@@ -56,14 +101,19 @@ static int		autocomplete(char *buf, int size)
 	if ((dir = opendir(path)) == NULL)
 		return (0);
 
+	if (path_list)
+		menu = malloc(sizeof(char*) * 30); // warning
 	search_len = ft_strlen(slash_pos);
 	while ((d = readdir(dir)) != NULL)
 	{
 		if (*d->d_name == '.')	continue ;
 		if (!candidat)
 		{
-			if (ft_contained(d->d_name, slash_pos))
+			if (ft_contained(d->d_name, slash_pos)) {
 				candidat = d->d_name;
+				if (path_list)
+					menu[n_path++] = ft_strjoin(d->d_name, "\r\n");
+			}
 		}
 		else if (ft_contained(d->d_name, slash_pos))
 		{
@@ -71,7 +121,27 @@ static int		autocomplete(char *buf, int size)
 				mult_cand++;
 				eql = new_eql;
 			}
+			if (path_list)
+				menu[n_path++] = ft_strjoin(d->d_name, "\r\n");
 		}
+	}
+	if (path_list)
+		menu[n_path] = NULL;
+
+	if (mult_cand && path_list)
+	{
+		store_cursor();
+		hide_cursor();
+		write(1, "\n", 1);
+		n_path = display_menu_list((const char **)menu, n_path, RED1, WHIT0);
+		eql = ft_strlen(menu[n_path]) - 2;
+		if (eql >= size - (slash_pos - buf))
+			goto ret_0;
+		ft_strncpy(slash_pos, menu[n_path], eql);
+		ft_free2d(menu);
+		load_cursor();
+		display_cursor();
+		goto ret_1;
 	}
 
 
@@ -90,6 +160,8 @@ static int		autocomplete(char *buf, int size)
 			goto ret_0;
 		ft_strncpy(slash_pos, candidat, eql);
 	}
+
+ret_1:
 	closedir(dir);
 	return (1);
 
@@ -99,8 +171,8 @@ ret_0:
 }
 
 /*
-** TERMINAL MODES
-*/
+ ** TERMINAL MODES
+ */
 
 extern void		make_terminal_raw(int mode)
 {
@@ -130,8 +202,8 @@ extern void		make_terminal_raw(int mode)
 
 
 /*
-** STD INPUT FUNCTIONS
-*/
+ ** STD INPUT FUNCTIONS
+ */
 
 extern t_key	get_key(void)
 {
@@ -231,7 +303,9 @@ extern void	advanced_user_input(char *buf, int size, int flag)
 		}
 		else if (key == KEY_TAB && flag & PATH_AUTOCOMP)
 		{
-			if (buf[len - 1] != '/' && autocomplete(buf, size - 1)) {
+			if ( (buf[len - 1] != '/' && autocomplete(buf, size - 1, flag & PATH_LIST))
+					|| (buf[len - 1] == '/' && flag & PATH_LIST && autocomplete_list(buf, size - 1)))
+			{
 				ft_puts(buf + curs);
 				curs = ft_strlen(buf);
 				len = curs;
@@ -246,8 +320,8 @@ extern void	advanced_user_input(char *buf, int size, int flag)
 
 
 /*
-**	MENU DISPLAY FUNCTIONS
-*/
+ **	MENU DISPLAY FUNCTIONS
+ */
 extern void		display_menu_lcm(const char **list, int size, t_menu *opt, int *t)
 {
 	int		selected = 0;
@@ -260,8 +334,8 @@ extern void		display_menu_lcm(const char **list, int size, t_menu *opt, int *t)
 	while (1)
 	{
 		/*
-		** print menu with current choice and selected choices highlighting
-		*/
+		 ** print menu with current choice and selected choices highlighting
+		 */
 		i = 0;
 		ft_puts(opt->others);
 		while (list[i])
@@ -286,8 +360,8 @@ extern void		display_menu_lcm(const char **list, int size, t_menu *opt, int *t)
 
 
 		/*
-		**	get pressed key & execute action
-		*/
+		 **	get pressed key & execute action
+		 */
 		c = get_key();
 		if		(c == KEY_ENTER) {
 			if (selected == size) break ;
@@ -296,10 +370,6 @@ extern void		display_menu_lcm(const char **list, int size, t_menu *opt, int *t)
 		else if (c == KEY_BACKSP)	break ;
 		else if (c == KEY_UP)		selected = (selected == 0) ? size : selected - 1;
 		else if (c == KEY_DOWN)		selected = (selected == size) ? 0: selected + 1;
-		else if (c == KEY_ESC) {
-			make_terminal_raw(0);
-			exit(0);
-		}
 		move_cursor(KEY_UP, size + 1);
 	}
 	size++;
@@ -317,8 +387,8 @@ extern int		display_menu_list(const char **list, int size, const char *s_color, 
 	while (1)
 	{
 		/*
-		** print menu with current choice highlighting
-		*/
+		 ** print menu with current choice highlighting
+		 */
 		i = 0;
 		ft_puts(o_color);
 		while (list[i])
@@ -335,18 +405,15 @@ extern int		display_menu_list(const char **list, int size, const char *s_color, 
 		}
 
 		/*
-		**	get pressed key & action
-		*/
+		 **	get pressed key & action
+		 */
 		c = get_key();
 		if		(c == KEY_ENTER)	break ;
 		else if (c == KEY_UP)		selected = (selected == 0) ? size - 1: selected - 1;
 		else if (c == KEY_DOWN)		selected = (selected == size - 1) ? 0: selected + 1;
-		else if (c == KEY_ESC) {
-			make_terminal_raw(0);
-			exit(0);
-		}
 		move_cursor(KEY_UP, size);
 	}
+	size++;
 	clear_line_and_move_up(size);
 	make_terminal_raw(0);
 	return (selected);
@@ -355,8 +422,8 @@ extern int		display_menu_list(const char **list, int size, const char *s_color, 
 
 
 /*
-** PRINT FUNCTIONS
-*/
+ ** PRINT FUNCTIONS
+ */
 
 extern void		xyprint(const char *s, int x, int y)
 {
@@ -395,8 +462,8 @@ extern void		print_animation(char **img, unsigned int n_lines, unsigned int inte
 
 
 /*
-**	TERMINAL SIZE
-*/
+ **	TERMINAL SIZE
+ */
 
 extern void		get_terminal_size(int *intx, int *inty)
 {
@@ -426,8 +493,8 @@ extern void		get_terminal_size(int *intx, int *inty)
 
 
 /*
-** CURSOR FUNCTIONS
-*/
+ ** CURSOR FUNCTIONS
+ */
 extern void		get_cursor_position(int *intx, int *inty)
 {
 	char	*x;
