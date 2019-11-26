@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                          LE - /            */
 /*                                                              /             */
-/*   color.c                                          .::    .:/ .      .::   */
+/*   display_attributes.c                             .::    .:/ .      .::   */
 /*                                                 +:+:+   +:    +:  +:+:+    */
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
@@ -15,38 +15,26 @@
 
 void	lt_set_color(int color1, int color2, int video_mode)
 {
-	static const char	*fg = NULL;
-	static const char	*bg = NULL;
-	static const char	*mode = NULL;
-	char				*cmd;
-
-	if (!fg)
-	{
-		if ((fg = tgetstr("AF", NULL)) == NULL ||
-				((bg = tgetstr("AB", NULL)) == NULL))
-			return ;
-	}
 	if (color1 != LT_NONE)
-		cmd = tgoto(fg, 0, color1);
-	write(2, cmd, strlen(cmd));
+		lt_set_fg_color(color1);
 	if (color2 != LT_NONE)
-		cmd = tgoto(bg, 0, color2);
-	write(2, cmd, strlen(cmd));
+		lt_set_bg_color(color2);
 	if (video_mode != LT_NONE)
-		cmd = tgoto(mode, 0, video_mode);
-	write(2, cmd, strlen(cmd));
+		lt_set_video_mode(video_mode);
 }
 
 void	lt_reset_color(void)
 {
 	static const char	*reset = NULL;
+	static unsigned int	len;
 
 	if (!reset)
 	{
 		if ((reset = tgetstr("me", NULL)) == NULL)
 			return ;
+		len = strlen(reset);
 	}
-
+	write(2, reset, len);
 }
 
 void	lt_set_fg_color(int color)
@@ -70,7 +58,7 @@ void	lt_set_bg_color(int color)
 
 	if (!bg)
 	{
-		if ((bg = tgetstr("AM", NULL)) == NULL)
+		if ((bg = tgetstr("AB", NULL)) == NULL)
 			return ;
 	}
 	cmd = tgoto(bg, 0, color);
@@ -79,27 +67,27 @@ void	lt_set_bg_color(int color)
 
 void	lt_set_video_mode(int mode)
 {
-	static const char *const	cap = {
-		"mb", "us", "mb", "mh", "mk", "mp", "mr"
+	static char		*cap[7] = {
+		"md", "us", "mb", "mh", "mk", "mp", "mr"
 	};
-	static const char			*modes[] = {NULL};
-	unsigned int				i;
-	unsigned int				b;
+	static char		*modes[7] = {NULL};
+	unsigned int	i;
+	unsigned int	b;
 
 	i = 0;
 	b = 1u;
-	while (i != 7)
+	while (b != LT_MODE_END)
 	{
-		if ((mode & b) && modes[i] == NULL)
+		if ((mode & b))
 		{
-			if ((modes[i] = tgetstr(cap[i], NULL)) == NULL)
+			if (modes[i] == NULL)
 			{
-				i++;
-				b <<= 1;
-				continue ;
+				if ((modes[i] = tgetstr(cap[i], NULL)) != NULL)
+					write(2, modes[i], strlen(modes[i]));
 			}
+			else
+				write(2, modes[i], strlen(modes[i]));
 		}
-		write(2, modes[i], strlen(modes[i]));
 		i++;
 		b <<= 1;
 	}

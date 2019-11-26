@@ -12,6 +12,7 @@
 /* ************************************************************************** */
 
 #include "../includes/libterm.h"
+#include "key_list.h"
 #include <signal.h>
 
 // https://zestedesavoir.com/tutoriels/pdf/1733/termcap-et-terminfo.pdf
@@ -22,9 +23,7 @@
 
 void	put_sigwinch(int sig)
 {
-	int		w, h;
-
-	printf(" { window resized }\n", w, h);
+	printf(" { window resized }\n");
 }
 
 void	put_sig(int sig)
@@ -32,11 +31,54 @@ void	put_sig(int sig)
 	printf("SIGNAL IS %d\n", sig);
 }
 
+typedef struct	keyname_s
+{
+	char	*value;
+	char	*name;
+}
+keyname_t;
+
+keyname_t	button[] = {
+	{F1, "<F1>"}, {F2, "<F2>"}, {F3, "<F3>"}, {F4, "<F4>"},
+	{F5, "<F5>"}, {F6, "<F6>"}, {F7, "<F7>"}, {F8, "<F8>"},
+	{F9, "<F9>"}, {F10, "<F10>"}, {F12, "<F12>"},
+	{L_ARROW, "<LEFT>"}, {R_ARROW, "<RIGHT>"}, {U_ARROW, "<UP>"}, {D_ARROW, "<DOWN>"},
+	{CTRL_A, "<C^A>"}, {CTRL_B, "<C^B>"}, {CTRL_C, "<C^C>"}, {CTRL_D, "<C^D>"},
+	{CTRL_E, "<C^E>"}, {CTRL_F, "<C^F>"}, {CTRL_G, "<C^G>"}, {CTRL_H, "<C^H>"},
+	{CTRL_I, "<C^I/M>"}, /*{CTRL_J, "<C^J>"}, */{CTRL_K, "<C^K>"}, {CTRL_L, "<C^L>"},
+	{CTRL_N, "<C^N>"}, {CTRL_O, "<C^O>"}, {CTRL_P, "<C^P>"}, {CTRL_R, "<C^R>"},
+	{CTRL_T, "<C^T>"}, {CTRL_U, "<C^U>"}, {CTRL_V, "<C^V>"}, {CTRL_W, "<C^W>"},
+	{CTRL_X, "<C^X>"}, {CTRL_Y, "<C^Y>"}, {CTRL_Z, "<C^Z>"},
+	{ALT_A, "<ALT-A>"}, {ALT_B, "<ALT-B>"}, {ALT_C, "<ALT-C>"}, {ALT_D, "<ALT-D>"},
+	{ALT_E, "<ALT-E>"}, {ALT_F, "<ALT-F>"}, {ALT_G, "<ALT-G>"}, {ALT_H, "<ALT-H>"},
+	{ALT_I, "<ALT-I>"}, {ALT_J, "<ALT-J>"}, {ALT_K, "<ALT-K>"}, {ALT_L, "<ALT-L>"},
+	{ALT_M, "<ALT-M>"}, {ALT_N, "<ALT-N>"}, {ALT_O, "<ALT-O>"}, {ALT_P, "<ALT-P>"},
+	{ALT_Q, "<ALT-Q>"}, {ALT_R, "<ALT-R>"}, {ALT_S, "<ALT-S>"}, {ALT_T, "<ALT-T>"},
+	{ALT_U, "<ALT-U>"}, {ALT_V, "<ALT-V>"}, {ALT_W, "<ALT-W>"}, {ALT_X, "<ALT-X>"},
+	{ALT_Z, "<ALT-Z>"}, {ESCAPE, "<ESC>"}, {LINEFEED, "\n"}, {PASTE_START, "<PASTE>"},
+	{NULL, NULL}
+};
+
+int		get_key(const char *k, unsigned int *index)
+{
+	for (unsigned int i = 0; button[i].name; i++)
+	{
+		if (strcmp(button[i].value, k) == 0)
+		{
+			write(1, button[i].name, strlen(button[i].name));
+			*index = i;
+			return (1);
+		}
+	}
+	return (0);
+}
+
 int		main(void)
 {
 	char			*cmd;
-	char			key[4]; // gros tableau pour les copier/coller ?
+	char			key[16]; // gros tableau pour les copier/coller ?
 	unsigned int	klen;
+	unsigned int	tmp;
 
 	if (lt_init() != 1)
 	{
@@ -54,14 +96,18 @@ int		main(void)
 	lt_noecho_mode();
 	lt_enable_paste_mode();
 	lt_clear_screen();
-	lt_set_color(COLOR_RED, LT_NONE, LT_NONE);
+	lt_set_color(COLOR_RED, COLOR_WHITE, LT_UNDERLINE | LT_BOLD);
 
 //	print_prompt("mhfc_42sh$ ");
 //	cmd = get_user_command();
 
 	while (1)
 	{
-		klen = read(STDIN_FILENO, key, 4);
+		klen = read(STDIN_FILENO, key, 9);
+		key[klen] = 0;
+
+		if (get_key(key, &tmp))
+			continue ;
 
 		for (unsigned int i = 0; i < klen; i++)
 		{

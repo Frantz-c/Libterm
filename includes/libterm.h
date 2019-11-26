@@ -54,11 +54,12 @@ typedef struct s_term	t_term;
 
 # define LT_BOLD				0x1
 # define LT_UNDERLINE			0x2
-# define LT_BLINK				0x8
-# define LT_HALFBRIGHT			0x10
-# define LT_INVISIBLE			0x20
-# define LT_PROTECTED			0x40
-# define LT_REVERSE				0x80
+# define LT_BLINK				0x4
+# define LT_HALFBRIGHT			0x8
+# define LT_INVISIBLE			0x10
+# define LT_PROTECTED			0x20
+# define LT_REVERSE				0x40
+# define LT_MODE_END			0x80
 
 
 /*
@@ -129,8 +130,14 @@ void	lt_enable_paste_mode(void);
 void	lt_disable_paste_mode(void);
 
 /*
-** .c
+** display_attributes.c
 */
+void	lt_set_color(int color1, int color2, int video_mode);
+void	lt_reset_color(void);
+void	lt_set_fg_color(int color);
+void	lt_set_bg_color(int color);
+void	lt_set_video_mode(int mode);
+
 
 /*
 ** .c
