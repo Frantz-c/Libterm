@@ -11,6 +11,27 @@
 /*                                                        /                   */
 /* ************************************************************************** */
 
+/*
+**	PROMPT ESCAPE SEQUENCES
+**	
+**	%%	=	'%'
+**	%M	=	hostname
+**	%n	=	username
+**
+**	%?	=	last command return value
+**	%d
+**	%/	=	current directory path
+**	%~	=	current directory path (with $HOME replacement)
+**	%L	=	current value of $SHLVL
+**
+**	%D	=	current date.	for select a format: %D{string} (ex: %D{%d/%m/%y %H:%M:%S})
+**	%T	=	current time.	24h format
+**	%t	=	current time.	12h format
+**
+**	%B %b	=	bold start / end
+**	%U %u	=	underline start / end
+**	%F %f	=	color start / end	(ex: %F{blue,white} or %F{4,7}, %F{,2}, ...)
+*/
 void	print_prompt(const char *prompt)
 {
 
