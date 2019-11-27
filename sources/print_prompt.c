@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/26 12:52:35 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/26 14:01:32 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/27 20:15:27 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -32,7 +32,9 @@
 **	%U %u	=	underline start / end
 **	%F %f	=	color start / end	(ex: %F{blue,white} or %F{4,7}, %F{,2}, ...)
 */
+/*
 void	print_prompt(const char *prompt)
 {
 
 }
+*/

@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/21 16:35:21 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/26 10:42:05 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/27 18:07:49 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -22,32 +22,31 @@ int		lt_init(void)
 	return (tgetent(NULL, term));
 }
 
-/*
-	SIGWINCH ??
-*/
-int		lt_noecho_mode(void)
+int		lt_terminal_mode(uint32_t mode)
 {
-	static int	mode = -1;
+	static uint32_t			init = 0u;
 	static struct termios	default_mode;
 	static struct termios	noecho_mode;
 
-	if (mode == -1)
+	if (init == 0u)
 	{
 		if (tcgetattr(0, &default_mode) == -1)
 			return (-1);
-		noecho_mode = default_mode;
 		//noecho_mode.c_iflag = IGNBRK | IGNCR;
-		noecho_mode.c_lflag = 0;
-		noecho_mode.c_cc[VMIN] = 1;
+		noecho_mode = default_mode;
 		noecho_mode.c_cc[VTIME] = 0;
+		init++;
 	}
-	if (mode)
+	if (mode & LT_NOECHO)
 	{
-		tcsetattr(0, TCSANOW, &noecho_mode);
-		return (mode = 0);
+		noecho_mode.c_cc[VMIN] = (mode & LT_NOBLOC) ? 0 : 1;
+		noecho_mode.c_lflag = (mode & LT_NOSIG) ? 0 : ISIG;
+
+		return (tcsetattr(0, TCSANOW, &noecho_mode));
 	}
-	tcsetattr(0, TCSANOW, &default_mode);
-	return (mode = 1);
+	else if (mode & LT_RESTORE)
+		return (tcsetattr(0, TCSANOW, &default_mode));
+	return (-2);
 }
 
 void	lt_get_terminal_size(t_term *term)

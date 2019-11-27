@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/26 10:52:26 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/26 11:36:31 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/27 20:13:26 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -15,19 +15,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-unsigned int		secure_get_utf8_char_size(unsigned char *str)
+unsigned int	secure_get_utf8_char_size(const unsigned char *str, uint32_t len)
 {
 	if ((str[0] & 0x80u) == 0) // 0xxxxxxx
 		return (1);
 
-	if ((str[0] & 0xe0u) == 0xc0u) // 110xxxxx
+	if (len > 1 && (str[0] & 0xe0u) == 0xc0u) // 110xxxxx
 	{
 		if ((str[1] & 0xc0u) == 0x80u)
 			return (2);
 		return (0);
 	}
 
-	if ((str[0] & 0xf0u) == 0xe0u) // 1110xxxx
+	if (len > 2 && (str[0] & 0xf0u) == 0xe0u) // 1110xxxx
 	{
 		if ((str[0] & 0x0fu) == 0)
 		{
@@ -46,7 +46,7 @@ unsigned int		secure_get_utf8_char_size(unsigned char *str)
 		return (0);
 	}
 
-	if ((str[0] & 0xf8u) == 0xf0u) // 11110xxx
+	if (len > 3 && (str[0] & 0xf8u) == 0xf0u) // 11110xxx
 	{
 		if ((str[0] & 0x07u) == 0) // 11110000
 		{
@@ -144,7 +144,7 @@ unsigned int    get_utf8_string_width2(const char *s, unsigned int bytes)
     }
     return (n);
 }
-
+/*
 int    main(void)
 {
     char            test[] = "日本語の文章です, où est l'éléphant ?";
@@ -155,3 +155,4 @@ int    main(void)
     printf("\"%s\" -> %u characters, %u cols\n", test, nchar, ncol);
     return (0);
 }
+*/
