@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/28 14:59:34 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/28 20:21:55 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -24,6 +24,22 @@
 
 
 t_term				g_term;
+
+void	move_cursors_right(t_cmds *cmd, uint8_t width, uint8_t size)
+{
+	cmd->curs.x += width;
+	cmd->curs.byte += size;
+	g_term.curs.x += width;
+	lt_move_n_right(width);
+}
+
+void	move_cursors_left(t_cmds *cmd, uint8_t width, uint8_t size)
+{
+	cmd->curs.x -= width;
+	cmd->curs.byte -= size;
+	g_term.curs.x -= width;
+	lt_move_n_left(width);
+}
 
 
 void	free_cmd(t_cmds *cmd)
@@ -77,81 +93,17 @@ char	*nalloc(char *ptr, uint32_t plen, uint32_t nlen)
 
 int		pasted_text(const char buf[], uint32_t len)
 {
-	if (len > strlen(PASTE_START) && !memcmp(buf, PASTE_START, len))
+	if (len > strlen(PASTE_START) && !memcmp(buf, PASTE_START, strlen(PASTE_START)))
 		return (1);
 	return (0);
 }
 
 void	paste(const char buf[], uint32_t len, t_cmds *cmd)
 {
-	return ;
-}
-
-uint32_t	execute_escape_sequence(t_cmds *cmd, char *buf, uint32_t *len)
-{
-	static const t_escape_action 	l_escape[] = {
-		{L_ARROW, &l_arrow}, {U_ARROW, &u_arrow}, {D_ARROW, &d_arrow}, {R_ARROW, &r_arrow},
-		{MAJ_RIGHT, &maj_right}, {MAJ_LEFT, &maj_left},
-		{DELETE, &delete}, {ESCAPE, &escape},
-		{F1, &f1}, {F2, &f2}, {F3, &f3}, {F4, &f4},
-		{F5, &f5}, {F6, &f6}, {F7, &f7}, {F8, &f8},
-		{F9, &f9}, {F10, &f10}, {F12, &f12},
-		{NULL, NULL}
-	};
+	char		*pasted;
 	uint32_t	i;
 
-	i = 0;
-	while (l_escape[i].value)
-	{
-		if (*len == strlen(l_escape[i].value) && memcmp(l_escape[i].value, buf, *len) == 0)
-		{
-			l_escape[i].exec_action(cmd);
-			return (1);
-		}
-		i++;
-	}
-	
-	i = 0;
-	while (buf[i] == '\e')
-	{
-		i++;
-		if (i == *len)
-		{
-			*len = 0;
-			return (0);
-		}
-	}
-	*len -= i;
-	memmove(buf, buf + i, *len);
-	return (0);
-}
 
-void	execute_control(t_cmds *cmd, char c)
-{
-	static const t_control_action 	control[] = {
-		{CTRL_A, &ctrl_a}, {CTRL_B, &ctrl_b}, {CTRL_C, &ctrl_c}, {CTRL_D, &ctrl_d},
-		{CTRL_E, &ctrl_e}, {CTRL_F, &ctrl_f}, {CTRL_G, &ctrl_g}, {CTRL_H, &ctrl_h},
-		{CTRL_I, &ctrl_i}, {CTRL_K, &ctrl_k}, {CTRL_L, &ctrl_l}, {CTRL_N, &ctrl_n},
-		{CTRL_O, &ctrl_o}, {CTRL_P, &ctrl_p}, {CTRL_R, &ctrl_r}, {CTRL_T, &ctrl_t},
-		{CTRL_U, &ctrl_u}, {CTRL_V, &ctrl_v}, {CTRL_W, &ctrl_w}, {CTRL_X, &ctrl_x},
-		{CTRL_Y, &ctrl_y}, {CTRL_Z, &ctrl_z}, {0, NULL}
-	};
-	uint32_t	i;
-
-	i = 0;
-	while (control[i].value)
-	{
-		if (control[i].value == c)
-		{
-			control[i].exec_action(cmd);
-			return ;
-		}
-		i++;
-	}
-}
-
-void	erase_previous_char(t_cmds *cmd)
-{
 	return ;
 }
 
@@ -238,18 +190,6 @@ void	copy_and_display_input(t_cmds *cmd, const char buf[], uint32_t len)
 	i = 0;
 	while (i < len)
 	{
-		if (buf[i] == '`' && (cmd->quote & SQUOTE) == 0)
-		{
-			cmd->quote ^= BQUOTE;
-		}
-		else if (buf[i] == '\'' && (cmd->quote & DQUOTE) == 0)
-		{
-			cmd->quote ^= SQUOTE;
-		}
-		else if (buf[i] == '"' && (cmd->quote & SQUOTE) == 0)
-		{
-			cmd->quote ^= DQUOTE;
-		}
 		clen = get_utf8_char_size(buf + i);
 //		printf("[clen = %u && write_char_to_cmd()]\n", clen);
 		write_char_to_cmd(cmd, buf + i, clen);
@@ -278,7 +218,6 @@ void	get_user_cmd(t_cmds *cmd)
 				break;
 		}
 		
-//		printf("[pasted_text()]\n");
 		// move in "execute_escape_sequence()"
 		if (pasted_text(buf, len))
 		{
@@ -308,19 +247,16 @@ void	get_user_cmd(t_cmds *cmd)
 		else if (len == 1u && buf[0] > 0 && buf[0] < 27 && buf[0] != '\n'
 				&& buf[0] != '\r' && buf[0] != 17 && buf[0] != 19)
 		{
-			if (buf[0] == CTRL_C)
-			{
-				free_cmd(cmd);
+			if (buf[0] == CTRL_C) //faire qqch
 				break;
-			}
 //			printf("[execute_control()]\n");
 			execute_control(cmd, buf[0]);
 			continue ;
 		}
 		else if (len == 1u && buf[0] == BACKSPACE)
 		{
-//			printf("[erase_previous_char()]\n");
-			erase_previous_char(cmd);
+//			printf("[backspace()]\n");
+			backspace(cmd);
 			continue ;
 		}
 
@@ -388,18 +324,12 @@ int		main(void)
 		i = 0;
 		while (i < cmd.row)
 		{
-			printf("\nlaunch -> \"%s\"", cmd.line[i]);
+			printf("\nlaunch -> \"%.*s\"", (int)cmd.top[i], cmd.line[i]);
 			fflush(stdout);
 			g_term.curs.y++;
-			free(cmd.line[i]);
 			i++;
 		}
-		if (cmd.row)
-		{
-			free(cmd.line);
-			free(cmd.col);
-			free(cmd.top);
-		}
+		free_cmd(&cmd);
 		if (g_term.curs.y < (g_term.h - 1))
 			g_term.curs.y++;
 		g_term.curs.x = 0;
