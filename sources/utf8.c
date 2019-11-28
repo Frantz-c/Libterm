@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/26 10:52:26 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/27 20:13:26 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/28 13:38:33 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -15,8 +15,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-unsigned int	secure_get_utf8_char_size(const unsigned char *str, uint32_t len)
+uint8_t		secure_get_utf8_char_size(const char *s, uint32_t len)
 {
+	const uint8_t	*str = (const uint8_t *)s;
+
 	if ((str[0] & 0x80u) == 0) // 0xxxxxxx
 		return (1);
 
@@ -73,28 +75,86 @@ unsigned int	secure_get_utf8_char_size(const unsigned char *str, uint32_t len)
 	return (0);
 }
 
-unsigned int	get_utf8_char_width(const char *s)
+uint8_t		get_utf8_char_width(const char *s)
 {
-   if ((const unsigned char)*s < 0xE0u)
+	const unsigned char	*us = (const unsigned char *)s;
+
+	if (*us < 0xE0u)
 		return (1);
 	return (2);
 }
 
-unsigned int	get_utf8_char_size(const char *s)
+uint8_t		get_utf8_char_size(const char *s)
 {
-   if ((const unsigned char)*s < 0xC0u)
+	const unsigned char	*us = (const unsigned char *)s;
+
+   if (*us < 0xC0u)
 		return (1);
-	else if ((const unsigned char)*s < 0xE0u)
+	else if (*us < 0xE0u)
 		return (2);
-	else if ((const unsigned char)*s < 0xF0u)
+	else if (*us < 0xF0u)
 		return (3);
 	return (4);
+}
+
+void		get_utf8_char_info(const char *s, uint8_t *width, uint8_t *size)
+{
+	const unsigned char	*us = (const unsigned char *)s;
+
+   if (*us < 0xC0u)
+		*size = 1;
+	else if (*us < 0xE0u)
+		*size = 2;
+	else if (*us < 0xF0u)
+		*size = 3;
+	else
+		*size = 4;
+
+	*width =  (*us < 0xE0u) ? 1 : 2;
+}
+
+uint8_t		get_utf8_prev_char_width(const char *s)
+{
+	const unsigned char	*us = (const unsigned char *)s - 1;
+
+	while ((*us & 0xC0u) == 0x80u)
+		us--;
+   if (*us < 0xE0u)
+		return (1);
+	return (2);
+}
+
+uint8_t		get_utf8_prev_char_size(const char *s)
+{
+	const uint8_t	*us = (const unsigned char *)s - 1;
+	uint8_t			size;
+
+	size = 1;
+	while ((*us & 0xC0u) == 0x80u)
+	{
+		us--;
+		size++;
+	}
+	return (size);
+}
+
+void		get_utf8_prev_char_info(const char *s, uint8_t *width, uint8_t *size)
+{
+	const uint8_t	*us = (const unsigned char *)s - 1;
+
+	*size = 1;
+	while ((*us & 0xC0u) == 0x80u)
+	{
+		us--;
+		(*size)++;
+	}
+	*width = (*us < 0xE0u) ? 1 : 2;
 }
 
 /*
 **	works only with valid UTF-8 strings.
 */
-unsigned int    strlen_utf8(const char *s)
+uint32_t    strlen_utf8(const char *s)
 {
     unsigned int    n;
 
@@ -110,16 +170,18 @@ unsigned int    strlen_utf8(const char *s)
 /*
 **	works only with valid UTF-8 strings.
 */
-unsigned int    get_utf8_string_width(const char *s)
+uint32_t    get_utf8_string_width(const char *s)
 {
-    unsigned int    n;
-    unsigned int    add;
+    uint32_t    n;
+    uint8_t		width;
+	uint8_t		size;
 
     n = 0;
     while (*s)
     {
-        n += get_utf8_char_width(s);
-		s += get_utf8_char_size(s);
+		get_utf8_char_info(s, &width, &size);
+        n += width;
+		s += size;
     }
     return (n);
 }
@@ -127,20 +189,21 @@ unsigned int    get_utf8_string_width(const char *s)
 /*
 **	works only with valid UTF-8 strings.
 */
-unsigned int    get_utf8_string_width2(const char *s, unsigned int bytes)
+uint32_t    get_utf8_string_width2(const char *s, uint32_t bytes)
 {
-    unsigned int    n;
-    unsigned int    add;
+    uint32_t    n;
+	uint8_t		width;
+	uint8_t		size;
 
     n = 0;
     while (*s && bytes)
     {
-		add = get_utf8_char_width(s);
-        if (bytes - add > bytes)
+		get_utf8_char_info(s, &width, &size);
+        if (bytes - size > bytes)
             break ;
-        bytes = (bytes - add);
-        n += (add == 1) ? add : 2;
-        s += add;
+        bytes = (bytes - size);
+        n += width;
+        s += bytes;
     }
     return (n);
 }

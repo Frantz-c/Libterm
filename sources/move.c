@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 13:14:10 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/26 10:44:10 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/28 14:54:03 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -23,7 +23,7 @@ void	lt_move_cursor(int col, int row)
 		if ((move = tgetstr("cm", NULL)) == NULL)
 			return ;
 	}
-	command = tgoto(move, row, col);
+	command = tgoto(move, col, row);
 	write(2, command, strlen(command));
 }
 

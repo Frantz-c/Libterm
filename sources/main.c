@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/27 20:46:33 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/28 14:59:34 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -23,8 +23,8 @@
 // https://cirw.in/blog/bracketed-paste   http://www.xfree86.org/current/ctlseqs.html#Bracketed%20Paste%20Mode
 
 
-
 t_term				g_term;
+
 
 void	free_cmd(t_cmds *cmd)
 {
@@ -40,16 +40,21 @@ void	free_cmd(t_cmds *cmd)
 		free(cmd->col);
 	if (cmd->top)
 		free(cmd->top);
+	if (cmd->pad)
+		free(cmd->pad);
 	cmd->row = 0;
 }
 
-void	init_cmd(t_cmds *cmd)
+void	init_cmd(t_cmds *cmd, const char *prompt, uint32_t plen)
 {
+	cmd->prompt = prompt;
 	cmd->row = 0;
 	cmd->col = NULL;
 	cmd->line = NULL;
 	cmd->top = NULL;
-	cmd->curs = (t_pos){0, 0};
+	cmd->pad = malloc(sizeof(uint32_t));
+	cmd->pad[0] = print_prompt(prompt, plen);
+	cmd->curs = (t_curs_pos){0, 0, 0};
 	cmd->quote = 0;
 }
 
@@ -70,12 +75,6 @@ char	*nalloc(char *ptr, uint32_t plen, uint32_t nlen)
 	return (new);
 }
 
-uint32_t	print_prompt(const char *s)
-{
-	write(1, s, strlen(s));
-	return (strlen(s));
-}
-
 int		pasted_text(const char buf[], uint32_t len)
 {
 	if (len > strlen(PASTE_START) && !memcmp(buf, PASTE_START, len))
@@ -88,7 +87,7 @@ void	paste(const char buf[], uint32_t len, t_cmds *cmd)
 	return ;
 }
 
-uint32_t	execute_escape_sequence(t_cmds *cmd, uint32_t prompt_len, char *buf, uint32_t *len)
+uint32_t	execute_escape_sequence(t_cmds *cmd, char *buf, uint32_t *len)
 {
 	static const t_escape_action 	l_escape[] = {
 		{L_ARROW, &l_arrow}, {U_ARROW, &u_arrow}, {D_ARROW, &d_arrow}, {R_ARROW, &r_arrow},
@@ -106,7 +105,7 @@ uint32_t	execute_escape_sequence(t_cmds *cmd, uint32_t prompt_len, char *buf, ui
 	{
 		if (*len == strlen(l_escape[i].value) && memcmp(l_escape[i].value, buf, *len) == 0)
 		{
-			l_escape[i].exec_action(cmd, prompt_len);
+			l_escape[i].exec_action(cmd);
 			return (1);
 		}
 		i++;
@@ -127,7 +126,7 @@ uint32_t	execute_escape_sequence(t_cmds *cmd, uint32_t prompt_len, char *buf, ui
 	return (0);
 }
 
-void	execute_control(t_cmds *cmd, uint32_t prompt_len, char c)
+void	execute_control(t_cmds *cmd, char c)
 {
 	static const t_control_action 	control[] = {
 		{CTRL_A, &ctrl_a}, {CTRL_B, &ctrl_b}, {CTRL_C, &ctrl_c}, {CTRL_D, &ctrl_d},
@@ -144,30 +143,34 @@ void	execute_control(t_cmds *cmd, uint32_t prompt_len, char c)
 	{
 		if (control[i].value == c)
 		{
-			control[i].exec_action(cmd, prompt_len);
+			control[i].exec_action(cmd);
 			return ;
 		}
 		i++;
 	}
 }
 
-void	erase_previous_char(t_cmds *cmd, uint32_t prompt_len)
+void	erase_previous_char(t_cmds *cmd)
 {
 	return ;
 }
+
 /*
-typedef struct	s_cmds
-{
-	char		*line[];
-	t_pos		curs;
-	uint32_t	top[];
-	uint32_t	col[];
-	uint32_t	row;
-	uint8_t		quote;
-}
-t_cmds;
+	typedef struct	s_cmds
+	{
+		char		*prompt;
+		char		**line;
+		t_pos		curs;
+		uint32_t	*top;
+		uint32_t	*col;
+		uint32_t	row;
+		uint32_t	plen;
+		uint8_t		quote;
+	}
+	t_cmds;
 */
-void	write_char_to_cmd(t_cmds *cmd, uint32_t plen, const char *buf, uint32_t clen)
+
+void	write_char_to_cmd(t_cmds *cmd, const char *buf, uint32_t clen)
 {
 	unsigned int	add;
 
@@ -194,14 +197,18 @@ void	write_char_to_cmd(t_cmds *cmd, uint32_t plen, const char *buf, uint32_t cle
 										cmd->col[cmd->curs.y] + add);
 	}
 
+	uint8_t		width;
 	// add characters
-	if (cmd->curs.x == cmd->top[cmd->curs.y])
+	if (cmd->curs.byte == cmd->top[cmd->curs.y])
 	{
 //		printf("[add_characters]\n");
 		// write to the buffer
-		memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, buf, clen);
-		cmd->curs.x += clen;
+		memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, buf, clen);
+		cmd->curs.byte += clen;
 		cmd->top[cmd->curs.y] += clen;
+		width = get_utf8_string_width2(buf, clen);
+		cmd->curs.x += width;
+		g_term.curs.x += width;
 
 		write(STDOUT_FILENO, buf, clen);	// display characters
 	}
@@ -209,16 +216,21 @@ void	write_char_to_cmd(t_cmds *cmd, uint32_t plen, const char *buf, uint32_t cle
 	else
 	{
 //		printf("[insert_characters]\n");
-		memmove(cmd->line[cmd->curs.y] + cmd->curs.x + clen, cmd->line[cmd->curs.y] + cmd->curs.x,
-				cmd->top[cmd->curs.y] - cmd->curs.x);
+		memmove(cmd->line[cmd->curs.y] + cmd->curs.byte + clen, cmd->line[cmd->curs.y] + cmd->curs.byte,
+				cmd->top[cmd->curs.y] - cmd->curs.byte);
+		memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, buf, clen);
 		cmd->top[cmd->curs.y] += clen;
 		lt_clear_end_of_line();
-		write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.x, cmd->top[cmd->curs.y] - cmd->curs.x);
-		cmd->curs.x += clen;
+		write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.byte, cmd->top[cmd->curs.y] - cmd->curs.byte);
+		width = get_utf8_string_width2(buf, clen);
+		cmd->curs.x += width;
+		g_term.curs.x += width;
+		cmd->curs.byte += clen;
+		lt_move_cursor(g_term.curs.x, g_term.curs.y);
 	}
 }
 
-void	copy_and_display_input(t_cmds *cmd, uint32_t prompt_len, const char buf[], uint32_t len)
+void	copy_and_display_input(t_cmds *cmd, const char buf[], uint32_t len)
 {
 	unsigned int	i;
 	unsigned int	clen;
@@ -240,12 +252,12 @@ void	copy_and_display_input(t_cmds *cmd, uint32_t prompt_len, const char buf[], 
 		}
 		clen = get_utf8_char_size(buf + i);
 //		printf("[clen = %u && write_char_to_cmd()]\n", clen);
-		write_char_to_cmd(cmd, prompt_len, buf + i, clen);
+		write_char_to_cmd(cmd, buf + i, clen);
 		i += clen;
 	}
 }
 
-void	get_user_cmd(t_cmds *cmd, uint32_t prompt_len)
+void	get_user_cmd(t_cmds *cmd)
 {
 	char			buf[READ_LEN];
 	uint32_t	len;
@@ -260,7 +272,7 @@ void	get_user_cmd(t_cmds *cmd, uint32_t prompt_len)
 		{
 			if (cmd->quote)
 			{
-				write_char_to_cmd(cmd, prompt_len, "<quote>", 7u);
+				write_char_to_cmd(cmd, "<quote>", 7u);
 			}
 			else
 				break;
@@ -281,7 +293,7 @@ void	get_user_cmd(t_cmds *cmd, uint32_t prompt_len)
 		while (j < len)
 		{
 //			printf("[secure_get_utf8_char_size()]\n");
-			if ((clen = secure_get_utf8_char_size((unsigned char *)buf + j, len - j)) == 0)
+			if ((clen = secure_get_utf8_char_size(buf + j, len - j)) == 0)
 				buf[j++] = '?';
 			else
 				j += clen;
@@ -290,7 +302,7 @@ void	get_user_cmd(t_cmds *cmd, uint32_t prompt_len)
 		if (buf[0] == '\e')
 		{
 //			printf("[execute_escape_sequence()]\n");
-			if (execute_escape_sequence(cmd, prompt_len, buf, &len))
+			if (execute_escape_sequence(cmd, buf, &len))
 				continue ;
 		}
 		else if (len == 1u && buf[0] > 0 && buf[0] < 27 && buf[0] != '\n'
@@ -302,18 +314,18 @@ void	get_user_cmd(t_cmds *cmd, uint32_t prompt_len)
 				break;
 			}
 //			printf("[execute_control()]\n");
-			execute_control(cmd, prompt_len, buf[0]);
+			execute_control(cmd, buf[0]);
 			continue ;
 		}
 		else if (len == 1u && buf[0] == BACKSPACE)
 		{
 //			printf("[erase_previous_char()]\n");
-			erase_previous_char(cmd, prompt_len);
+			erase_previous_char(cmd);
 			continue ;
 		}
 
 //		printf("[copy_and_display_input()]\n");
-		copy_and_display_input(cmd, prompt_len, buf, len);
+		copy_and_display_input(cmd, buf, len);
 	}
 }
 
@@ -367,16 +379,18 @@ int		main(void)
 	lt_clear_screen();
 	lt_set_color(COLOR_CYAN, LT_NONE, LT_BOLD);
 	lt_get_terminal_size(&g_term);
+	g_term.curs = (t_pos){0, 0};
 
 	while (1)
 	{
-		init_cmd(&cmd);
-		get_user_cmd(&cmd, print_prompt("mhfc_42sh$ "));
+		init_cmd(&cmd, "( mhfc_42sh )>==] ", 18u);
+		get_user_cmd(&cmd); // read user input
 		i = 0;
 		while (i < cmd.row)
 		{
 			printf("\nlaunch -> \"%s\"", cmd.line[i]);
 			fflush(stdout);
+			g_term.curs.y++;
 			free(cmd.line[i]);
 			i++;
 		}
@@ -386,6 +400,9 @@ int		main(void)
 			free(cmd.col);
 			free(cmd.top);
 		}
+		if (g_term.curs.y < (g_term.h - 1))
+			g_term.curs.y++;
+		g_term.curs.x = 0;
 		write(STDOUT_FILENO, "\n", 1);
 	}
 	return (0);

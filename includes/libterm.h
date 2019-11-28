@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 12:52:12 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/27 20:13:17 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/28 13:15:05 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -57,6 +57,8 @@
 # define LT_REVERSE				0x40
 # define LT_MODE_END			0x80
 
+
+extern t_term				g_term;
 
 /*
 ** init.c
@@ -138,61 +140,70 @@ void	lt_set_video_mode(int mode);
 /*
 ** utf8.c
 */
-unsigned int	secure_get_utf8_char_size(const unsigned char *str, uint32_t len);
-unsigned int	get_utf8_char_width(const char *s);
-unsigned int	get_utf8_char_size(const char *s);
-unsigned int    strlen_utf8(const char *s);
-unsigned int    get_utf8_string_width(const char *s);
-unsigned int    get_utf8_string_width2(const char *s, unsigned int bytes);
+uint8_t		secure_get_utf8_char_size(const char *str, uint32_t len);
+uint8_t		get_utf8_char_width(const char *s);
+uint8_t		get_utf8_char_size(const char *s);
+uint32_t	strlen_utf8(const char *s);
+uint32_t	get_utf8_string_width(const char *s);
+uint32_t	get_utf8_string_width2(const char *s, uint32_t bytes);
+uint8_t		get_utf8_prev_char_width(const char *s);
+uint8_t		get_utf8_prev_char_size(const char *s);
+void		get_utf8_prev_char_info(const char *s, uint8_t *width, uint8_t *size);
+void		get_utf8_char_info(const char *s, uint8_t *width, uint8_t *size);
 
 
 /*
 ** escape_action.c
 */
-void	l_arrow(t_cmds *cmd, uint32_t plen);
-void	u_arrow(t_cmds *cmd, uint32_t plen);
-void	d_arrow(t_cmds *cmd, uint32_t plen);
-void	r_arrow(t_cmds *cmd, uint32_t plen);
-void	maj_right(t_cmds *cmd, uint32_t plen);
-void	maj_left(t_cmds *cmd, uint32_t plen);
-void	delete(t_cmds *cmd, uint32_t plen);
-void	escape(t_cmds *cmd, uint32_t plen);
-void	f1(t_cmds *cmd, uint32_t plen);
-void	f2(t_cmds *cmd, uint32_t plen);
-void	f3(t_cmds *cmd, uint32_t plen);
-void	f4(t_cmds *cmd, uint32_t plen);
-void	f5(t_cmds *cmd, uint32_t plen);
-void	f6(t_cmds *cmd, uint32_t plen);
-void	f7(t_cmds *cmd, uint32_t plen);
-void	f8(t_cmds *cmd, uint32_t plen);
-void	f9(t_cmds *cmd, uint32_t plen);
-void	f10(t_cmds *cmd, uint32_t plen);
-void	f12(t_cmds *cmd, uint32_t plen);
+void	l_arrow(t_cmds *cmd);
+void	u_arrow(t_cmds *cmd);
+void	d_arrow(t_cmds *cmd);
+void	r_arrow(t_cmds *cmd);
+void	maj_right(t_cmds *cmd);
+void	maj_left(t_cmds *cmd);
+void	delete(t_cmds *cmd);
+void	escape(t_cmds *cmd);
+void	f1(t_cmds *cmd);
+void	f2(t_cmds *cmd);
+void	f3(t_cmds *cmd);
+void	f4(t_cmds *cmd);
+void	f5(t_cmds *cmd);
+void	f6(t_cmds *cmd);
+void	f7(t_cmds *cmd);
+void	f8(t_cmds *cmd);
+void	f9(t_cmds *cmd);
+void	f10(t_cmds *cmd);
+void	f12(t_cmds *cmd);
 
 /*
 ** control_action.c
 */
-void	ctrl_a(t_cmds *cmd, uint32_t plen);
-void	ctrl_b(t_cmds *cmd, uint32_t plen);
-void	ctrl_c(t_cmds *cmd, uint32_t plen);
-void	ctrl_d(t_cmds *cmd, uint32_t plen);
-void	ctrl_e(t_cmds *cmd, uint32_t plen);
-void	ctrl_f(t_cmds *cmd, uint32_t plen);
-void	ctrl_g(t_cmds *cmd, uint32_t plen);
-void	ctrl_h(t_cmds *cmd, uint32_t plen);
-void	ctrl_i(t_cmds *cmd, uint32_t plen);
-void	ctrl_k(t_cmds *cmd, uint32_t plen);
-void	ctrl_l(t_cmds *cmd, uint32_t plen);
-void	ctrl_n(t_cmds *cmd, uint32_t plen);
-void	ctrl_o(t_cmds *cmd, uint32_t plen);
-void	ctrl_p(t_cmds *cmd, uint32_t plen);
-void	ctrl_r(t_cmds *cmd, uint32_t plen);
-void	ctrl_t(t_cmds *cmd, uint32_t plen);
-void	ctrl_u(t_cmds *cmd, uint32_t plen);
-void	ctrl_v(t_cmds *cmd, uint32_t plen);
-void	ctrl_w(t_cmds *cmd, uint32_t plen);
-void	ctrl_x(t_cmds *cmd, uint32_t plen);
-void	ctrl_y(t_cmds *cmd, uint32_t plen);
-void	ctrl_z(t_cmds *cmd, uint32_t plen);
+void	ctrl_a(t_cmds *cmd);
+void	ctrl_b(t_cmds *cmd);
+void	ctrl_c(t_cmds *cmd);
+void	ctrl_d(t_cmds *cmd);
+void	ctrl_e(t_cmds *cmd);
+void	ctrl_f(t_cmds *cmd);
+void	ctrl_g(t_cmds *cmd);
+void	ctrl_h(t_cmds *cmd);
+void	ctrl_i(t_cmds *cmd);
+void	ctrl_k(t_cmds *cmd);
+void	ctrl_l(t_cmds *cmd);
+void	ctrl_n(t_cmds *cmd);
+void	ctrl_o(t_cmds *cmd);
+void	ctrl_p(t_cmds *cmd);
+void	ctrl_r(t_cmds *cmd);
+void	ctrl_t(t_cmds *cmd);
+void	ctrl_u(t_cmds *cmd);
+void	ctrl_v(t_cmds *cmd);
+void	ctrl_w(t_cmds *cmd);
+void	ctrl_x(t_cmds *cmd);
+void	ctrl_y(t_cmds *cmd);
+void	ctrl_z(t_cmds *cmd);
+
+/*
+**	print_prompt.c
+*/
+uint32_t	print_prompt(const char *prompt, uint32_t len);
 
 #endif
