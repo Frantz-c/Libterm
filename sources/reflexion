@@ -1,0 +1,7 @@
+"とと tata"
+      ^
+col (alloc_siz)	-> 16
+top (len)	-> 11
+curs.x		-> 8
+curs.y		-> 1
+

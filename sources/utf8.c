@@ -6,7 +6,7 @@
 /*   By: fcordon <marvin@le-101.fr>                 +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/26 10:52:26 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/28 13:38:33 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/29 19:35:43 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -88,7 +88,7 @@ uint8_t		get_utf8_char_size(const char *s)
 {
 	const unsigned char	*us = (const unsigned char *)s;
 
-   if (*us < 0xC0u)
+	if (*us < 0xC0u)
 		return (1);
 	else if (*us < 0xE0u)
 		return (2);
@@ -101,7 +101,7 @@ void		get_utf8_char_info(const char *s, uint8_t *width, uint8_t *size)
 {
 	const unsigned char	*us = (const unsigned char *)s;
 
-   if (*us < 0xC0u)
+	if (*us < 0xC0u)
 		*size = 1;
 	else if (*us < 0xE0u)
 		*size = 2;
@@ -119,7 +119,7 @@ uint8_t		get_utf8_prev_char_width(const char *s)
 
 	while ((*us & 0xC0u) == 0x80u)
 		us--;
-   if (*us < 0xE0u)
+	if (*us < 0xE0u)
 		return (1);
 	return (2);
 }
@@ -156,7 +156,7 @@ void		get_utf8_prev_char_info(const char *s, uint8_t *width, uint8_t *size)
 */
 uint32_t    strlen_utf8(const char *s)
 {
-    unsigned int    n;
+    uint32_t    n;
 
     n = 0;
     while (*s)
@@ -207,15 +207,3 @@ uint32_t    get_utf8_string_width2(const char *s, uint32_t bytes)
     }
     return (n);
 }
-/*
-int    main(void)
-{
-    char            test[] = "日本語の文章です, où est l'éléphant ?";
-    unsigned int    nchar, ncol;
-
-    nchar = strlen_utf8(test);
-    ncol = get_utf8_string_width(test);
-    printf("\"%s\" -> %u characters, %u cols\n", test, nchar, ncol);
-    return (0);
-}
-*/

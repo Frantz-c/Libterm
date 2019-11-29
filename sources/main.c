@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/28 20:21:55 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/29 19:46:57 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -100,9 +100,81 @@ int		pasted_text(const char buf[], uint32_t len)
 
 void	paste(const char buf[], uint32_t len, t_cmds *cmd)
 {
+	char		tmp[8];
 	char		*pasted;
 	uint32_t	i;
 
+	if (cmd->line != NULL)
+		return ;
+
+	// ALLOUER AVANT !!!!!!!!!!!!!!!!!!!!
+	if (cmd->line == NULL)
+	{
+		cmd->line = malloc(sizeof(char *));
+		cmd->col = malloc(sizeof(uint32_t));
+		cmd->top = malloc(sizeof(uint32_t));
+		if (!cmd->line || !cmd->col || !cmd->top)
+		{
+			dprintf(STDERR_FILENO, "ERROR MALLOC 1\n");
+			exit(1);
+		}
+		cmd->col[cmd->curs.y] = 0;
+		cmd->line[cmd->curs.y] = NULL;
+		cmd->row = 1;
+		cmd->curs.byte = 0;
+	}
+
+
+	i = len - 1;
+	while (i)
+	{
+		if (buf[i] == '\e')
+		{
+			if (memcmp(PASTE_END, buf + i, strlen(PASTE_END)) == 0)
+			{
+				if (i > (cmd->col[cmd->curs.y] - cmd->top[cmd->curs.y]))
+				{
+					uint32_t add;
+					add = (g_term.w > i) ? g_term.w : i + g_term.w;
+					cmd->line[cmd->curs.y] = nalloc(cmd->line[cmd->curs.y], cmd->col[cmd->curs.y],
+													cmd->col[cmd->curs.y] + add);
+				}
+				cmd->top[cmd->curs.y] += i;
+				memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, buf, i);
+				write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.byte, cmd->top[cmd->curs.y]);
+				lt_move_cursor(g_term.curs.x, g_term.curs.y);
+			}
+		}
+		i--;
+	}
+
+	/*
+	i = 0;
+	while (len)
+	{
+		if (buf[i] == '\e')
+		{
+			if (strlen(PASTE_END) > len)
+			{
+				
+			}
+			else if (memcmp(PASTE_END, buf + i, strlen(PASTE_END)) == 0)
+			{
+				if (i > (cmd->col[cmd->curs.y] - cmd->top[cmd->curs.y]))
+				{
+					add = (g_term.w > i) ? g_term.w : clen + g_term.w;
+					cmd->line[cmd->curs.y] = nalloc(cmd->line[cmd->curs.y], cmd->col[cmd->curs.y],
+													cmd->col[cmd->curs.y] + add);
+				}
+				memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, )
+
+			}
+
+		}
+		i++;
+		len--;
+	}
+	*/
 
 	return ;
 }
