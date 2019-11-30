@@ -27,16 +27,14 @@ t_term				g_term;
 
 void	move_cursors_right(t_cmds *cmd, uint8_t width, uint8_t size)
 {
-	cmd->curs.x += width;
-	cmd->curs.byte += size;
+	cmd->curs.x += size;
 	g_term.curs.x += width;
 	lt_move_n_right(width);
 }
 
 void	move_cursors_left(t_cmds *cmd, uint8_t width, uint8_t size)
 {
-	cmd->curs.x -= width;
-	cmd->curs.byte -= size;
+	cmd->curs.x -= size;
 	g_term.curs.x -= width;
 	lt_move_n_left(width);
 }
@@ -47,31 +45,30 @@ void	free_cmd(t_cmds *cmd)
 	unsigned int	i;
 
 	i = 0;
-	while (i < cmd->row)
+	while (i < cmd->n_row)
 	{
 		free(cmd->line[i]);
 		i++;
 	}
-	if (cmd->col)
-		free(cmd->col);
-	if (cmd->top)
-		free(cmd->top);
+	if (cmd->real_len)
+		free(cmd->real_len);
+	if (cmd->len)
+		free(cmd->len);
 	if (cmd->pad)
 		free(cmd->pad);
-	cmd->row = 0;
+	cmd->n_row = 0;
 }
 
 void	init_cmd(t_cmds *cmd, const char *prompt, uint32_t plen)
 {
 	cmd->prompt = prompt;
-	cmd->row = 0;
-	cmd->col = NULL;
+	cmd->n_row = 0;
+	cmd->real_len = NULL;
 	cmd->line = NULL;
-	cmd->top = NULL;
+	cmd->len = NULL;
 	cmd->pad = malloc(sizeof(uint32_t));
 	cmd->pad[0] = print_prompt(prompt, plen);
-	cmd->curs = (t_curs_pos){0, 0, 0};
-	cmd->quote = 0;
+	cmd->curs = (t_pos){0, 0};
 }
 
 char	*nalloc(char *ptr, uint32_t plen, uint32_t nlen)
@@ -111,17 +108,17 @@ void	paste(const char buf[], uint32_t len, t_cmds *cmd)
 	if (cmd->line == NULL)
 	{
 		cmd->line = malloc(sizeof(char *));
-		cmd->col = malloc(sizeof(uint32_t));
-		cmd->top = malloc(sizeof(uint32_t));
-		if (!cmd->line || !cmd->col || !cmd->top)
+		cmd->real_len = malloc(sizeof(uint32_t));
+		cmd->len = malloc(sizeof(uint32_t));
+		if (!cmd->line || !cmd->real_len || !cmd->len)
 		{
 			dprintf(STDERR_FILENO, "ERROR MALLOC 1\n");
 			exit(1);
 		}
-		cmd->col[cmd->curs.y] = 0;
+		cmd->real_len[cmd->curs.y] = 0;
 		cmd->line[cmd->curs.y] = NULL;
-		cmd->row = 1;
-		cmd->curs.byte = 0;
+		cmd->n_row = 1;
+		cmd->curs.x = 0;
 	}
 
 
@@ -132,16 +129,16 @@ void	paste(const char buf[], uint32_t len, t_cmds *cmd)
 		{
 			if (memcmp(PASTE_END, buf + i, strlen(PASTE_END)) == 0)
 			{
-				if (i > (cmd->col[cmd->curs.y] - cmd->top[cmd->curs.y]))
+				if (i > (cmd->real_len[cmd->curs.y] - cmd->len[cmd->curs.y]))
 				{
 					uint32_t add;
 					add = (g_term.w > i) ? g_term.w : i + g_term.w;
-					cmd->line[cmd->curs.y] = nalloc(cmd->line[cmd->curs.y], cmd->col[cmd->curs.y],
-													cmd->col[cmd->curs.y] + add);
+					cmd->line[cmd->curs.y] = nalloc(cmd->line[cmd->curs.y], cmd->real_len[cmd->curs.y],
+													cmd->real_len[cmd->curs.y] + add);
 				}
-				cmd->top[cmd->curs.y] += i;
-				memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, buf, i);
-				write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.byte, cmd->top[cmd->curs.y]);
+				cmd->len[cmd->curs.y] += i;
+				memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, buf, i);
+				write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.x, cmd->len[cmd->curs.y]);
 				lt_move_cursor(g_term.curs.x, g_term.curs.y);
 			}
 		}
@@ -201,38 +198,36 @@ void	write_char_to_cmd(t_cmds *cmd, const char *buf, uint32_t clen)
 	if (cmd->line == NULL)
 	{
 		cmd->line = malloc(sizeof(char *));
-		cmd->col = malloc(sizeof(uint32_t));
-		cmd->top = malloc(sizeof(uint32_t));
-		if (!cmd->line || !cmd->col || !cmd->top)
+		cmd->real_len = malloc(sizeof(uint32_t));
+		cmd->len = malloc(sizeof(uint32_t));
+		if (!cmd->line || !cmd->real_len || !cmd->len)
 		{
 			dprintf(STDERR_FILENO, "ERROR MALLOC 1\n");
 			exit(1);
 		}
-		cmd->col[cmd->curs.y] = 0;
+		cmd->len[cmd->curs.y] = 0;
 		cmd->line[cmd->curs.y] = NULL;
-		cmd->row = 1;
+		cmd->n_row = 1;
 	}
 
-	if (clen > (cmd->col[cmd->curs.y] - cmd->top[cmd->curs.y]))
+	if (clen > (cmd->real_len[cmd->curs.y] - cmd->len[cmd->curs.y]))
 	{
 //		printf("[nalloc()]\n");
 		add = (g_term.w > clen) ? g_term.w : clen + g_term.w;
-		cmd->line[cmd->curs.y] = nalloc(cmd->line[cmd->curs.y], cmd->col[cmd->curs.y],
-										cmd->col[cmd->curs.y] + add);
+		cmd->line[cmd->curs.y] = nalloc(cmd->line[cmd->curs.y],
+										cmd->real_len[cmd->curs.y],
+										cmd->real_len[cmd->curs.y] + add);
 	}
 
-	uint8_t		width;
 	// add characters
-	if (cmd->curs.byte == cmd->top[cmd->curs.y])
+	if (cmd->curs.x == cmd->len[cmd->curs.y])
 	{
 //		printf("[add_characters]\n");
 		// write to the buffer
-		memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, buf, clen);
-		cmd->curs.byte += clen;
-		cmd->top[cmd->curs.y] += clen;
-		width = get_utf8_string_width2(buf, clen);
-		cmd->curs.x += width;
-		g_term.curs.x += width;
+		memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, buf, clen);
+		cmd->curs.x += clen;
+		cmd->len[cmd->curs.y] += clen;
+		g_term.curs.x += get_utf8_string_width2(buf, clen);
 
 		write(STDOUT_FILENO, buf, clen);	// display characters
 	}
@@ -240,16 +235,16 @@ void	write_char_to_cmd(t_cmds *cmd, const char *buf, uint32_t clen)
 	else
 	{
 //		printf("[insert_characters]\n");
-		memmove(cmd->line[cmd->curs.y] + cmd->curs.byte + clen, cmd->line[cmd->curs.y] + cmd->curs.byte,
-				cmd->top[cmd->curs.y] - cmd->curs.byte);
-		memcpy(cmd->line[cmd->curs.y] + cmd->curs.byte, buf, clen);
-		cmd->top[cmd->curs.y] += clen;
+		memmove(cmd->line[cmd->curs.y] + cmd->curs.x + clen,
+				cmd->line[cmd->curs.y] + cmd->curs.x,
+				cmd->len[cmd->curs.y] - cmd->curs.x);
+		memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, buf, clen);
+		cmd->len[cmd->curs.y] += clen;
 		lt_clear_end_of_line();
-		write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.byte, cmd->top[cmd->curs.y] - cmd->curs.byte);
-		width = get_utf8_string_width2(buf, clen);
-		cmd->curs.x += width;
-		g_term.curs.x += width;
-		cmd->curs.byte += clen;
+		write(STDOUT_FILENO, cmd->line[cmd->curs.y] + cmd->curs.x,
+							cmd->len[cmd->curs.y] - cmd->curs.x);
+		g_term.curs.x += get_utf8_string_width2(buf, clen);
+		cmd->curs.x += clen;
 		lt_move_cursor(g_term.curs.x, g_term.curs.y);
 	}
 }
@@ -271,7 +266,7 @@ void	copy_and_display_input(t_cmds *cmd, const char buf[], uint32_t len)
 
 void	get_user_cmd(t_cmds *cmd)
 {
-	char			buf[READ_LEN];
+	char		buf[READ_LEN];
 	uint32_t	len;
 	uint32_t	i;
 
@@ -282,11 +277,10 @@ void	get_user_cmd(t_cmds *cmd)
 
 		if (len == 1 && buf[0] == '\n')
 		{
-			if (cmd->quote)
-			{
-				write_char_to_cmd(cmd, "<quote>", 7u);
-			}
-			else
+			// check quotes
+//			if (cmd->quote)
+//				write_char_to_cmd(cmd, "<quote>", 7u);
+//			else
 				break;
 		}
 		
@@ -394,9 +388,9 @@ int		main(void)
 		init_cmd(&cmd, "( mhfc_42sh )>==] ", 18u);
 		get_user_cmd(&cmd); // read user input
 		i = 0;
-		while (i < cmd.row)
+		while (i < cmd.n_row)
 		{
-			printf("\nlaunch -> \"%.*s\"", (int)cmd.top[i], cmd.line[i]);
+			printf("\nlaunch -> \"%.*s\"", (int)cmd.len[i], cmd.line[i]);
 			fflush(stdout);
 			g_term.curs.y++;
 			i++;

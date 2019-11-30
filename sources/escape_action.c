@@ -18,13 +18,12 @@ void	l_arrow(t_cmds *cmd)
 	unsigned char	width;
 	unsigned char	size;
 
-	if (cmd->curs.byte > 0)
+	if (cmd->curs.x > 0)
 	{
-		get_utf8_prev_char_info(cmd->line[cmd->curs.y] + cmd->curs.byte, &width, &size);
-		cmd->curs.x -= width;
+		get_utf8_prev_char_info(cmd->line[cmd->curs.y] + cmd->curs.x, &width, &size);
 		g_term.curs.x -= width;
 		lt_move_n_left(width);
-		cmd->curs.byte -= size;
+		cmd->curs.x -= size;
 	}
 }
 
@@ -43,13 +42,12 @@ void	r_arrow(t_cmds *cmd)
 	unsigned char	width;
 	unsigned char	size;
 
-	if (cmd->top && cmd->curs.byte < cmd->top[cmd->curs.y])
+	if (cmd->len && cmd->curs.x < cmd->len[cmd->curs.y])
 	{
-		get_utf8_char_info(cmd->line[cmd->curs.y] + cmd->curs.byte, &width, &size);
-		cmd->curs.x += width;
+		get_utf8_char_info(cmd->line[cmd->curs.y] + cmd->curs.x, &width, &size);
 		g_term.curs.x += width;
 		lt_move_n_right(width);
-		cmd->curs.byte += size;
+		cmd->curs.x += size;
 	}
 }
 

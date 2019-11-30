@@ -31,14 +31,19 @@ typedef struct	s_term
 }
 t_term;
 
-typedef struct	s_curs_pos
+typedef struct	s_cmds
 {
-	uint32_t	x;		// position par rapport à l'écran
-	uint32_t	y;
-	uint32_t	byte;	// position par rapport à la chaine
+	char		**line;		// command
+	t_pos		curs;		// cursor (dans la chaine)
+	uint32_t	*len;		// longueur de la ligne (remplie)
+	uint32_t	*real_len;	// longueur de la ligne (allouée)
+	uint32_t	*pad;		// padding de la ligne
+	const char	*prompt;	// prompt (avant interpretation)
+	uint32_t	plen;		// longueur du prompt
+	uint32_t	n_row;		// nombre de lignes
 }
-t_curs_pos;
-
+t_cmds;
+/*
 typedef struct	s_cmds
 {
 	char		**line;	// command
@@ -52,7 +57,7 @@ typedef struct	s_cmds
 	uint8_t		quote;
 }
 t_cmds;
-
+*/
 typedef struct	s_escape_action
 {
 	char	*value;
