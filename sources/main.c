@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/29 19:46:57 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/02 20:16:50 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -65,48 +65,92 @@ int		nalloc_if_needed(t_cmds *cmd, uint32_t size)
 }
 
 /*
+**	create the same function with a call to a function pointer in a defined range (for paste)
+*/
+
+/*
 **	print the command but don't care of
 **	the cursor's position after execution
 */
 void	print_cmd_from_cursor2(t_cmds *cmd)
 {
-	uint32_t	line_width;
-	uint32_t	line_size;
-	uint32_t	line_start;
-	uint32_t	i;
-	uint32_t	j;
-	uint32_t	k;
+	uint32_t	x;
+	uint32_t	y;
+	uint32_t	lsize;
+	t_pos		ic;
 
-	i = cmd->curs.y;
-	k = 0;
-	while (i < cmd->n_row)
+	ic = g_term.curs;
+	if (is_cmd_too_large(cmd))
 	{
-		line_start = (i == 0) ? cmd->curs.x : 0;
-		j = 0;
-		dprintf(debug, "line_start = %u < cmd->len[%u] = %u\n", line_start, i, cmd->len[i]);
-		while (line_start < cmd->len[i])
+		lt_clear_screen();
+		write(STDOUT_FILENO, "cmd too long", 12);
+		lt_terminal_mode(LT_RESTORE);
+		exit(1);
+	}
+
+	lsize = 0;
+	y = cmd->curs.y;
+	x = g_term.curs.x;
+	if (get_utf8_string_width2(cmd->line[y] + cmd->curs.x, cmd->len[y] - cmd->curs.x) <= g_term.w - x)
+	{
+		lsize = get_utf8_string_size(cmd->line[y] + cmd->curs.x, g_term.w - x, cmd->len[y] - cmd->curs.x);
+		write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
+		dprintf(debug, "print : \"%.*s\"\n", lsize, cmd->line[y] + cmd->curs.x);
+		// créer une fonction
+		if (x == g_term.w - 1)
 		{
-			(j == 0) ? lt_move_cursor((i == 0) ? g_term.curs.x : cmd->pad[i], g_term.curs.y + k) :
-						lt_move_cursor(0, cmd->origin_y + j + k);
-
-			uint32_t x, y;
-			lt_get_cursor_position(&x, &y);
-			dprintf(debug, "real cursor position = {%u, %u}\n", x, y);
-
-			line_width = (j == 0) ? g_term.w - cmd->pad[i] : g_term.w;
-			line_size = get_utf8_string_size(cmd->line[i] + line_start,
-										line_width, cmd->len[i] - line_start);
-			dprintf(debug, "get_...(\"%.*s\"), line_size = %u\n",
-					cmd->len[i] - line_start, cmd->line[i] + line_start, line_size);
-			lt_clear_end_of_line();
-			dprintf(debug, "line_size = %u : write \"%.*s\"\n",
-					line_size, line_size, cmd->line[i] + line_start);
-			write(STDOUT_FILENO, cmd->line[i] + line_start, line_size);
-			line_start += line_size;
-			j++;
+			if (ic.y == g_term.h - 1)
+			{
+				dprintf(debug, "scroll\n");
+				lt_move_col(0);
+				lt_scroll_up();
+				g_term.curs.y--;
+			}
+			else
+			{
+				lt_move_down();
+				ic.y++;
+			}
 		}
-		k += j;
-		i++;
+		if (lsize + cmd->curs.x == cmd->len[y])
+			return ;
+	}
+	dprintf(debug, "x >= g_term.w\n");
+	x = cmd->curs.x + lsize;
+	while (1)
+	{
+		// afficher l'excedent sur les lignes suivantes
+		while (x != cmd->len[y])
+		{
+			// créer une fonction
+			if (ic.y == g_term.h - 1)
+			{
+				dprintf(debug, "scroll\n");
+				lt_move_col(0);
+				lt_scroll_up();
+				g_term.curs.y--;
+			}
+			else
+			{
+				lt_move_down();
+				ic.y++;
+			}
+
+			dprintf(debug, "while (%u != %u) : 101  while (x != cmd->len[y])\n", x, cmd->len[y]);
+			if ((lsize = get_utf8_string_size(cmd->line[y] + x, g_term.w, cmd->len[y] - x)) == 0)
+			{
+				dprintf(debug, "BREAK\n");
+				break ;
+			}
+			write(STDOUT_FILENO, cmd->line[y] + x, lsize);
+			x += lsize;
+		}
+		if (++y == cmd->n_row)
+			break ;
+		if (cmd->pad[y])
+			write(STDOUT_FILENO, cmd->prefix[y], cmd->pad[y]); // afficher les messages prefixe ("<quote>, ...")
+		lsize = get_utf8_string_size(cmd->line[y], g_term.w - cmd->pad[y], cmd->len[y]);
+		write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
 	}
 }
 
@@ -187,8 +231,6 @@ void	print_cmd_from_cursor(t_cmds *cmd)
 			line_size = get_utf8_string_size(cmd->line[i] + line_start,
 										line_width, cmd->len[i] - line_start);
 			lt_clear_end_of_line();
-			dprintf(debug, "line_size = %u : write \"%.*s\"\n",
-					line_size, line_size, cmd->line[i] + line_start);
 			write(STDOUT_FILENO, cmd->line[i] + line_start, line_size);
 			line_start += line_size;
 			j++;
@@ -258,8 +300,8 @@ void	init_cmd(t_cmds *cmd, const char *prompt, uint32_t plen)
 	}
 
 	cmd->pad[0] = print_prompt(prompt, plen);
-	cmd->len[cmd->curs.y] = 0;
-	cmd->line[cmd->curs.y] = NULL;
+	cmd->len[0] = 0;
+	cmd->line[0] = NULL;
 }
 
 
@@ -349,8 +391,7 @@ void	write_char_to_cmd(t_cmds *cmd, const char *c, uint32_t csize)
 	}
 	else
 		g_term.curs.x += width;
-	dprintf(debug, "g_term.curs = {%u, %u}, curs = {%u, %u}, screen_width = %u\n",
-			g_term.curs.x, g_term.curs.y, cmd->curs.x, cmd->curs.y, g_term.w);
+	dprintf(debug, "lt_move_cursor(%u, %u)\n", g_term.curs.x, g_term.curs.y);
 	lt_move_cursor(g_term.curs.x, g_term.curs.y);
 }
 
@@ -359,12 +400,10 @@ void	copy_and_display_input(t_cmds *cmd, const char buf[], uint32_t len)
 	unsigned int	i;
 	unsigned int	clen;
 
-	dprintf(debug, "buffer[] = \"%.*s\"\n", len, buf);
 	i = 0;
 	while (i < len)
 	{
 		clen = get_utf8_char_size(buf + i);
-		dprintf(debug, "buf + i = \"%.*s\"\n", clen, buf + i);
 		write_char_to_cmd(cmd, buf + i, clen);
 		i += clen;
 	}
@@ -380,7 +419,6 @@ void	get_user_cmd(t_cmds *cmd)
 	{
 		len = read(STDIN_FILENO, buf, READ_LEN);
 		i = 0;
-		dprintf(debug, "buf = \"%.*s\"\n", (int)len, buf);
 
 		if (cmd->pasted)
 		{

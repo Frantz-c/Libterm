@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/27 19:58:10 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/28 13:47:21 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/02 15:20:42 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -38,6 +38,7 @@ typedef struct	s_cmds
 	uint32_t	*len;		// longueur de la ligne (remplie)
 	uint32_t	*real_len;	// longueur de la ligne (allouée)
 	uint32_t	*pad;		// padding de la ligne
+	char		**prefix;	// prefixe de chaque ligne
 	const char	*prompt;	// prompt (avant interpretation)
 	uint32_t	plen;		// longueur du prompt
 	uint32_t	n_row;		// nombre de lignes

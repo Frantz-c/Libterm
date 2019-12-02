@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 12:52:12 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/28 19:44:49 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/02 17:28:01 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -97,6 +97,8 @@ void	lt_move_n_down(int n);
 void	lt_move_cursor(int col, int row);
 void	lt_move_cursor_home(void);
 void	lt_move_cursor_end(void);
+void	lt_move_col(int col);
+void	lt_move_row(int row);
 
 
 /*
@@ -114,6 +116,13 @@ void	lt_insert_mode_on(void);
 void	lt_insert_mode_off(void);
 void	lt_insert_n_blank_char(int n);
 void	lt_insert_blank_char(void);
+
+/*
+**	scroll.c
+*/
+void	lt_scroll_up(void);
+void	lt_scroll_down(void);
+
 
 /*
 ** if size is 0, function use ft_strlen
@@ -218,6 +227,11 @@ void	execute_control(t_cmds *cmd, char c);
 **	backspace.c
 */
 void	backspace(t_cmds *cmd);
+
+/*
+**	string_is_to_large.c
+*/
+uint32_t	is_cmd_too_large(t_cmds *cmd);
 
 void	lt_get_cursor_position(uint32_t *x, uint32_t *y);
 
