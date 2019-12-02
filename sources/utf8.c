@@ -207,3 +207,24 @@ uint32_t    get_utf8_string_width2(const char *s, uint32_t bytes)
     }
     return (n);
 }
+
+uint32_t	get_utf8_string_size(const char *s,
+								uint32_t width, uint32_t max_size)
+{
+	uint32_t	size;
+	uint8_t		chr_width;
+	uint8_t		chr_size;
+	const char	*start = s;
+
+	size = 0;
+	while (max_size && width)
+	{
+		get_utf8_char_info(s, &chr_width, &chr_size);
+		if (width - chr_width > width)
+			break;
+		width -= chr_width;
+		max_size -= chr_size;
+		s += chr_size;
+	}
+	return ((uint32_t)(s - start));
+}

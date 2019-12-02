@@ -1,0 +1,10 @@
+buf = "山"
+buffer[] = "山"
+buf + i = "山"
+line_start = 0 < cmd->len[0] = 3
+real cursor position = {18, 42}
+get_...("山"), line_size = 3
+line_size = 3 : write "山"
+g_term.curs = {20, 42}, curs = {3, 0}, screen_width = 158
+buf = "
+"

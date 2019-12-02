@@ -150,6 +150,8 @@ uint8_t		get_utf8_prev_char_width(const char *s);
 uint8_t		get_utf8_prev_char_size(const char *s);
 void		get_utf8_prev_char_info(const char *s, uint8_t *width, uint8_t *size);
 void		get_utf8_char_info(const char *s, uint8_t *width, uint8_t *size);
+uint32_t	get_utf8_string_size(const char *s,
+							uint32_t width, uint32_t max_size);
 
 
 /*
@@ -216,5 +218,7 @@ void	execute_control(t_cmds *cmd, char c);
 **	backspace.c
 */
 void	backspace(t_cmds *cmd);
+
+void	lt_get_cursor_position(uint32_t *x, uint32_t *y);
 
 #endif
