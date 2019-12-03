@@ -44,10 +44,9 @@ typedef struct	s_cmds
 	uint32_t	n_row;		// nombre de lignes
 	uint32_t	total_len;	// longueur de la commande
 	uint32_t	locked_rows;// nombre de lignes non-modifiables
-	uint32_t	pasted_byte;// paste position in string
-	uint32_t	pasted_pos;	// paste position in screen
-	uint32_t	pasted_end_pos;
-	uint32_t	pasted_end_byte;
+	uint32_t	pasted_beg;	// paste position in line
+	uint32_t	pasted_end;	// paste end position in line
+//	uint32_t	pasted_pos;	// paste position in screen
 	uint32_t	origin_y;	// cmd start y position
 	uint8_t		pasted;		// bool, prev action is paste
 }

@@ -3,7 +3,7 @@
 /*                                                              /             */
 /*   main.c                                           .::    .:/ .      .::   */
 /*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
+/*   By: fcordon <fcordon@student.le-101.fr>        +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
 /*   Updated: 2019/12/02 20:16:50 by fcordon     ###    #+. /#+    ###.fr     */
@@ -17,8 +17,8 @@
 #include <stdint.h>
 #include <fcntl.h>
 
-#define LINE_MAX_LEN
-#define CMD_MAX_LEN
+#define LINE_MAX_LEN	0xffffu
+#define CMD_MAX_LEN		0xffffu
 
 // https://zestedesavoir.com/tutoriels/pdf/1733/termcap-et-terminfo.pdf
 // https://zestedesavoir.com/tutoriels/1733/termcap-et-terminfo/
