@@ -6,7 +6,7 @@
 /*   By: fcordon <fcordon@student.le-101.fr>        +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/12/02 20:16:50 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/03 19:32:58 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -30,40 +30,6 @@ int					debug;
 
 t_term				g_term;
 
-char	*nalloc(char *ptr, uint32_t plen, uint32_t nlen)
-{
-	char	*new;
-
-	if ((new = malloc(nlen)) == NULL)
-	{
-		dprintf(STDERR_FILENO, "[nalloc(%p, %u, %u)] Malloc error: exit\n", ptr, plen, nlen);
-		exit(1);
-	}
-	if (ptr)
-	{
-		memcpy(new, ptr, (plen > nlen) ? nlen : plen);
-		free(ptr);
-	}
-	return (new);
-}
-
-int		nalloc_if_needed(t_cmds *cmd, uint32_t size)
-{
-	uint32_t	add;
-
-	if (size > (cmd->real_len[cmd->curs.y] - cmd->len[cmd->curs.y]))
-	{
-		add = (g_term.w > size) ? g_term.w : size + g_term.w;
-		cmd->line[cmd->curs.y] = nalloc
-		(
-			cmd->line[cmd->curs.y],
-			cmd->real_len[cmd->curs.y],
-			cmd->real_len[cmd->curs.y] + add
-		);
-	}
-	return (0);
-}
-
 /*
 **	create the same function with a call to a function pointer in a defined range (for paste)
 */
@@ -72,6 +38,7 @@ int		nalloc_if_needed(t_cmds *cmd, uint32_t size)
 **	print the command but don't care of
 **	the cursor's position after execution
 */
+/*
 void	print_cmd_from_cursor2(t_cmds *cmd)
 {
 	uint32_t	x;
@@ -153,7 +120,7 @@ void	print_cmd_from_cursor2(t_cmds *cmd)
 		write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
 	}
 }
-
+*/
 
 /*
 **	insert character
@@ -161,7 +128,7 @@ void	print_cmd_from_cursor2(t_cmds *cmd)
 void	insert_char_from_cursor(t_cmds *cmd, const char *c, uint32_t csize)
 {
 	// insert character or add at end
-	nalloc_if_needed(cmd, csize);
+	nalloc_if_needed(cmd, cmd->curs.y, csize);
 	if (cmd->len[cmd->curs.y] != cmd->curs.x)	// insertion
 	{
 		memmove(cmd->line[cmd->curs.y] + cmd->curs.x + csize,
@@ -293,7 +260,8 @@ void	init_cmd(t_cmds *cmd, const char *prompt, uint32_t plen)
 	cmd->real_len = malloc(sizeof(uint32_t));
 	cmd->len = malloc(sizeof(uint32_t));
 	cmd->pad = malloc(sizeof(uint32_t));
-	if (!cmd->line || !cmd->real_len || !cmd->len || !cmd->pad)
+	cmd->prefix = malloc(sizeof(char *));
+	if (!cmd->line || !cmd->real_len || !cmd->len || !cmd->pad || !cmd->prefix)
 	{
 		dprintf(STDERR_FILENO, "ERROR MALLOC 1\n");
 		exit(1);
@@ -301,7 +269,9 @@ void	init_cmd(t_cmds *cmd, const char *prompt, uint32_t plen)
 
 	cmd->pad[0] = print_prompt(prompt, plen);
 	cmd->len[0] = 0;
+	cmd->real_len[0] = 0;
 	cmd->line[0] = NULL;
+	cmd->prefix[0] = NULL;
 }
 
 
@@ -311,7 +281,7 @@ int		pasted_text(const char buf[], uint32_t len)
 		return (1);
 	return (0);
 }
-
+/*
 void	paste(char buf[], uint32_t len, t_cmds *cmd)
 {
 	char		tmp[8];
@@ -370,7 +340,7 @@ void	paste(char buf[], uint32_t len, t_cmds *cmd)
 	}
 	cmd->pasted = 1;
 }
-
+*/
 void	write_char_to_cmd(t_cmds *cmd, const char *c, uint32_t csize)
 {
 	uint32_t	width;
@@ -422,25 +392,18 @@ void	get_user_cmd(t_cmds *cmd)
 
 		if (cmd->pasted)
 		{
-			lt_move_cursor(cmd->pasted_pos, g_term.curs.y);
-			lt_clear_end_of_line();
-			// clear x lines, depends of length
-			write(STDOUT_FILENO,
-					cmd->line[cmd->curs.y] + cmd->pasted_byte,
-					cmd->len[cmd->curs.y] - cmd->pasted_byte);
-			g_term.curs.x = get_utf8_string_width2(
-						cmd->line[cmd->curs.y] + cmd->pasted_byte,
-						cmd->len[cmd->curs.y] - cmd->pasted_byte);
+			// move cursor to paste start
+			// re-print the pasted text only
 			cmd->pasted = 0;
 		}
 
-		if (len == 1 && buf[0] == '\n')
+		if (cmd->len[0] && buf[0] == ENTER)
 		{
 			// check quotes
 //			if (cmd->quote)
-//				write_char_to_cmd(cmd, "<quote>", 7u);
+//				...
 //			else
-				break;
+//				break;
 		}
 		
 		// move in "execute_escape_sequence()"
@@ -449,6 +412,7 @@ void	get_user_cmd(t_cmds *cmd)
 			i = strlen(PASTE_START);
 			len -= i;
 			paste(buf + i, len, cmd);
+			print_paste
 			continue ;
 		}
 

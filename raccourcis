@@ -1,0 +1,25 @@
+^A			=	curseur au debut de la ligne
+^E			=	curseur à la fin de la ligne
+alt-left	=	avancer d'un mot
+alt-right	=	reculer d'un mot
+^B			=	bouger le curseur d'un caractere à gauche
+^F			=	bouger le curseur d'un caractere à droite
+			=	commande precedente
+^N			=	commande suivante
+
+^T			=	inverser le caractere precedent et le caractere courant
+
+^' '		=	entrer/sortir du mode selection
+^Y			=	copier
+^P			=	coller
+(possibilité de coller sur la selection)
+
+
+^U			=	supprimer la ligne
+^K			=	supprimer la fin de la ligne
+^H			=	supprimer le debut de la ligne
+^W			=	supprimer le mot courant ou precedent (si le curseur pointe sur un espace)
+^L			=	nettoyer l'ecran
+
+^R			=	recherche dans l'hisorique de commandes
+^G			=	quitter la recherche dans l'historique.../ afficher un nouveau prompt

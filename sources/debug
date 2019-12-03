@@ -1,0 +1,12 @@
+print : "r"
+lt_move_cursor(19, 73)
+print : "e"
+lt_move_cursor(20, 73)
+print : "s"
+lt_move_cursor(21, 73)
+print : "t"
+lt_move_cursor(22, 73)
+print : "e"
+lt_move_cursor(23, 73)
+print : " reste"
+lt_move_cursor(19, 73)

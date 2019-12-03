@@ -43,8 +43,14 @@ void	print_paste(t_cmds *cmd)
 	if (get_utf8_string_width2(cmd->line[y] + cmd->curs.x, cmd->len[y] - cmd->curs.x) <= g_term.w - x)
 	{
 		lsize = get_utf8_string_size(cmd->line[y] + cmd->curs.x, g_term.w - x, cmd->len[y] - cmd->curs.x);
-		// checker partout si on depasse pas (cmd->paste_pos + cmd->paste_len)
-		write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
+		if (y == cmd->pasted_beg.y && y == cmd->paste_end.y)
+		{
+			write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, cmd->pasted_end.x - cmd->curs.x);
+			lt_reset_color();
+			write(STDOUT_FILENO, cmd->line[y] + cmd->paste_end.x, lsize - (cmd->paste_end.x - cmd->curs.x));
+		}
+		else
+			write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
 		dprintf(debug, "print : \"%.*s\"\n", lsize, cmd->line[y] + cmd->curs.x);
 		// créer une fonction
 		if (x == g_term.w - 1)

@@ -5,6 +5,9 @@
 
 # define MAJ_RIGHT	"\x1B" "\x5B" "\x31" "\x3B" "\x32" "\x44"
 # define MAJ_LEFT	"\x1B" "\x5B" "\x31" "\x3B" "\x32" "\x43"
+
+# define ALT_RIGHT	"\x1B" "\x66"
+# define ALT_LEFT	"\x1B" "\x62"
 //# define MAJ_UP		"\x1B" "\x5B" "\x41" == UP
 //# define MAJ_DOWN	"\x1B" "\x5B" "\x42" == DOWN
 
@@ -49,11 +52,18 @@
 # define CTRL_Y		25
 # define CTRL_Z		26
 
+# define CTRL_4		28	/* == ^\  */
+# define CTRL_5		29	// == ^]
+# define CTRL_6		30
+# define CTRL_7		31
+
+# define ALT_SPACE	"\xC2" "\xA0"
+
 # define NULBYTE		0
-# define LINEFEED		"\xA"
+# define LINEFEED		'\n'
 # define ENTER			10
 # define BACKSPACE		127
-# define ESCAPE			"\e"
+# define ESCAPE			'\e'
 
 /*
 # define ALT_A			"\xC3" "\xA5"

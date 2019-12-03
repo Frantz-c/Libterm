@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 12:52:12 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/12/02 17:28:01 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/03 16:28:00 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -59,6 +59,7 @@
 
 
 extern t_term				g_term;
+extern int					debug;
 
 /*
 ** init.c
@@ -221,7 +222,7 @@ uint32_t	print_prompt(const char *prompt, uint32_t len);
 **	execute_special_keys.c
 */
 uint32_t	execute_escape_sequence(t_cmds *cmd, char *buf, uint32_t *len);
-void	execute_control(t_cmds *cmd, char c);
+void		execute_control(t_cmds *cmd, char c);
 
 /*
 **	backspace.c
@@ -234,5 +235,21 @@ void	backspace(t_cmds *cmd);
 uint32_t	is_cmd_too_large(t_cmds *cmd);
 
 void	lt_get_cursor_position(uint32_t *x, uint32_t *y);
+
+/*
+**	nalloc.c
+*/
+void	*nalloc(void *ptr, uint32_t plen, uint32_t nlen, size_t elem_size);
+int		nalloc_if_needed(t_cmds *cmd, uint32_t y, uint32_t size);
+
+/*
+**	insert_paste.c
+*/
+void	paste(char buf[], uint32_t len, t_cmds *cmd);
+
+/*
+**	print_cmd_from_cursor.c
+*/
+void	print_cmd_from_cursor2(t_cmds *cmd);
 
 #endif

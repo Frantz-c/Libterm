@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/27 14:10:39 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/03 18:16:24 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -29,45 +29,8 @@ void	put_sigwinch(int sig)
 void	put_sig(int sig)
 {
 	printf("SIGNAL IS %d\n", sig);
-	lt_noecho_mode();
+	lt_terminal_mode(LT_RESTORE);
 	exit(0);
-}
-
-typedef struct	keyname_s
-{
-	char	*value;
-	char	*name;
-}
-keyname_t;
-
-keyname_t	button[] = {
-	{MAJ_LEFT, "<MAJ_LEFT>"}, {MAJ_RIGHT, "<MAJ_RIGHT>"},
-	{F1, "<F1>"}, {F2, "<F2>"}, {F3, "<F3>"}, {F4, "<F4>"},
-	{F5, "<F5>"}, {F6, "<F6>"}, {F7, "<F7>"}, {F8, "<F8>"},
-	{F9, "<F9>"}, {F10, "<F10>"}, {F12, "<F12>"},
-	{L_ARROW, "<LEFT>"}, {R_ARROW, "<RIGHT>"}, {U_ARROW, "<UP>"}, {D_ARROW, "<DOWN>"},
-	{CTRL_A, "<C^A>"}, {CTRL_B, "<C^B>"}, {CTRL_C, "<C^C>"}, {CTRL_D, "<C^D>"},
-	{CTRL_E, "<C^E>"}, {CTRL_F, "<C^F>"}, {CTRL_G, "<C^G>"}, {CTRL_H, "<C^H>"},
-	{CTRL_I, "<C^I>"}, {CTRL_K, "<C^K>"}, {CTRL_L, "<C^L>"},
-	{CTRL_N, "<C^N>"}, {CTRL_O, "<C^O>"}, {CTRL_P, "<C^P>"}, {CTRL_R, "<C^R>"},
-	{CTRL_T, "<C^T>"}, {CTRL_U, "<C^U>"}, {CTRL_V, "<C^V>"}, {CTRL_W, "<C^W>"},
-	{CTRL_X, "<C^X>"}, {CTRL_Y, "<C^Y>"}, {CTRL_Z, "<C^Z>"},
-	{ESCAPE, "<ESC>"}, {LINEFEED, "\n"},
-	{NULL, NULL}
-};
-
-int		get_key(const char *k, unsigned int *index)
-{
-	for (unsigned int i = 0; button[i].name; i++)
-	{
-		if (strcmp(button[i].value, k) == 0)
-		{
-			write(1, button[i].name, strlen(button[i].name));
-			*index = i;
-			return (1);
-		}
-	}
-	return (0);
 }
 
 int		main(void)
@@ -93,74 +56,29 @@ int		main(void)
 	signal(SIGWINCH, put_sigwinch);
 
 
-	lt_noecho_mode();
-	lt_enable_paste_mode();
+	lt_terminal_mode(LT_NOECHO | LT_NOSIG);
 	lt_clear_screen();
 	lt_set_color(COLOR_CYAN, LT_NONE, LT_BOLD);
 
-//	print_prompt("mhfc_42sh$ ");
-//	cmd = get_user_command();
 
-	printf("PRESS HOME TO LAUNCH SIGNAL 11 >\n");
+	printf("PRESS A KEY >\n");
 	while (1)
 	{
 __read:
 		klen = read(STDIN_FILENO, key, 15);
-		//key[klen] = 0;
-/*
-		for (unsigned int z = 0; z != klen; z++)
-		{
-			printf("\"\\x%hhx\" ", key[z]);
-		}
-	lt_noecho_mode();
-		return (0);
-*/
-		if (get_key(key, &tmp))
-			continue ;
-
 		i = 0;
-		if (memcmp(key, PASTE_START, strlen(PASTE_START)) == 0)
-		{
-			write(1, "<PASTE_START>", 13);
-			i = strlen(PASTE_START);
-			klen -= i;
-			paste_mode = 1;
-		}
-
-		while (klen && key[i] >= ' ' && key[i] <= '~')
+	
+		while ((key[i] >= ' ' && key[i] <= '~') || key[i] == '\n')
 		{
 			if (key[i] == '!')
 			{
-				lt_noecho_mode();
+				lt_terminal_mode(LT_RESTORE);
 				return (0);
 			}
 			write(1, key + i, 1);
 			i++;
-			klen--;
-		}
-
-		if (klen == strlen(PASTE_END)
-				&& memcmp(key + i, PASTE_END, strlen(PASTE_END)) == 0)
-		{
-			paste_mode = 0;
-			write(1, "<PASTE_END>", 11);
-			i += strlen(PASTE_END);
-			klen -= strlen(PASTE_END);
-		}
-
-		i = 0;
-		if ((tmp = secure_get_utf8_char_size((const unsigned char *)key)) != 0)
-		{
-			while (1)
-			{
-				write(1, key + i, tmp);
-				i += tmp;
-				klen -= tmp;
-				if (klen == 0)
-					goto __read;
-				if ((tmp = secure_get_utf8_char_size((const unsigned char *)(key + i))) == 0)
-					break ;
-			}
+			if (--klen == 0)
+				goto __read;
 		}
 
 		for (; i < klen; i++)

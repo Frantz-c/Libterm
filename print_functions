@@ -1,0 +1,12 @@
+
+1) print the entire cmd (don't modify g_term.curs)
+
+2) print command from cursor (don't modify g_term.curs)
+
+3) print command from cursor with paste highlighting (don't modify g_term.curs)
+
+4) print paste only with or without highlighting
+
+...
+
+write a version of each function when terminal is too small

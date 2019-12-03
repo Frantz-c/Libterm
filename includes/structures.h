@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/27 19:58:10 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/12/02 15:20:42 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/03 19:00:01 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -15,6 +15,15 @@
 # define STRUCTURES_H
 
 # include <stdint.h>
+
+typedef struct	s_select
+{
+	uint32_t	sx;
+	uint32_t	sy;
+	uint32_t	ex;
+	uint32_t	ey;
+}
+t_select;
 
 typedef struct	s_pos
 {
@@ -44,10 +53,11 @@ typedef struct	s_cmds
 	uint32_t	n_row;		// nombre de lignes
 	uint32_t	total_len;	// longueur de la commande
 	uint32_t	locked_rows;// nombre de lignes non-modifiables
-	uint32_t	pasted_beg;	// paste position in line
-	uint32_t	pasted_end;	// paste end position in line
-//	uint32_t	pasted_pos;	// paste position in screen
+	t_pos		pasted_beg;	// paste position in line
+	t_pos		pasted_end;	// paste end position in line
 	uint32_t	origin_y;	// cmd start y position
+	t_select	selected;	// selection zone
+	uint8_t		select_mode;// bool
 	uint8_t		pasted;		// bool, prev action is paste
 }
 t_cmds;
