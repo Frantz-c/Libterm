@@ -63,7 +63,7 @@
 # define LINEFEED		'\n'
 # define ENTER			10
 # define BACKSPACE		127
-# define ESCAPE			'\e'
+# define ESCAPE			"\e"
 
 /*
 # define ALT_A			"\xC3" "\xA5"

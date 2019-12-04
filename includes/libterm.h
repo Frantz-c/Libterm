@@ -6,7 +6,7 @@
 /*   By: fcordon <mhouppin@le-101.fr>               +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 12:52:12 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/12/03 16:28:00 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/04 14:00:33 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -57,6 +57,7 @@
 # define LT_REVERSE				0x40
 # define LT_MODE_END			0x80
 
+# define BLOCK_SIZE				80
 
 extern t_term				g_term;
 extern int					debug;
@@ -246,6 +247,7 @@ int		nalloc_if_needed(t_cmds *cmd, uint32_t y, uint32_t size);
 **	insert_paste.c
 */
 void	paste(char buf[], uint32_t len, t_cmds *cmd);
+void	print_paste(t_cmds *cmd);
 
 /*
 **	print_cmd_from_cursor.c

@@ -6,7 +6,7 @@
 /*   By: fcordon <fcordon@student.le-101.fr>        +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/22 16:24:03 by fcordon      #+#   ##    ##    #+#       */
-/*   Updated: 2019/12/03 19:32:58 by fcordon     ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/04 18:19:02 by fcordon     ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -347,6 +347,7 @@ void	write_char_to_cmd(t_cmds *cmd, const char *c, uint32_t csize)
 
 	insert_char_from_cursor(cmd, c, csize);	// insert char in line
 	print_cmd_from_cursor2(cmd);			// print the cmd
+	dprintf(debug, "\n\n");
 	cmd->curs.x += csize;
 	width = get_utf8_char_width(c);
 	if (g_term.curs.x + width == g_term.w)
@@ -403,7 +404,7 @@ void	get_user_cmd(t_cmds *cmd)
 //			if (cmd->quote)
 //				...
 //			else
-//				break;
+				break;
 		}
 		
 		// move in "execute_escape_sequence()"
@@ -412,7 +413,7 @@ void	get_user_cmd(t_cmds *cmd)
 			i = strlen(PASTE_START);
 			len -= i;
 			paste(buf + i, len, cmd);
-			print_paste
+			//print_paste
 			continue ;
 		}
 

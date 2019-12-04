@@ -24,7 +24,7 @@ int		nalloc_if_needed(t_cmds *cmd, uint32_t y, uint32_t size)
 	//printf("cmd = %p, cmd->line[%u] = %p\n", cmd, y, cmd->line[y]);
 	if (size > (cmd->real_len[y] - cmd->len[y]))
 	{
-		add = (g_term.w > size) ? g_term.w : size + g_term.w;
+		add = (g_term.w > size) ? BLOCK_SIZE : size + BLOCK_SIZE;
 		cmd->line[y] = nalloc
 		(
 			cmd->line[y],
@@ -32,6 +32,7 @@ int		nalloc_if_needed(t_cmds *cmd, uint32_t y, uint32_t size)
 			cmd->real_len[y] + add,
 			sizeof(char)
 		);
+		cmd->real_len[y] += add;
 	}
 	return (0);
 }
