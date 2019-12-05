@@ -16,6 +16,13 @@
 
 # include <stdint.h>
 
+typedef struct	s_2ddim
+{
+	uint32_t	w;
+	uint32_t	h;
+}
+t_2ddim;
+
 typedef struct	s_select
 {
 	uint32_t	sx;

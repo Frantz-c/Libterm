@@ -14,7 +14,7 @@ static void	move_cursor_down(uint32_t *y, int line)
 		(*y)++;
 }
 
-//prompt$ "un text de test"|
+//prompt$ "un texte de test"|
 
 /*
 **	print the command but don't care of
@@ -28,7 +28,7 @@ void	print_cmd_from_cursor2(t_cmds *cmd)
 	t_pos		ic;
 
 	ic = g_term.curs;
-	if (is_cmd_too_large(cmd))
+	if (is_cmd_bigger_than_screen(cmd) == LT_TRUE)
 	{
 		lt_clear_screen();
 		write(STDOUT_FILENO, "cmd too long", 12);

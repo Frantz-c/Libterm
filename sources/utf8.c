@@ -203,7 +203,7 @@ uint32_t    get_utf8_string_width2(const char *s, uint32_t bytes)
             break ;
         bytes = (bytes - size);
         n += width;
-        s += bytes;
+        s += size;
     }
     return (n);
 }

@@ -59,6 +59,12 @@
 
 # define BLOCK_SIZE				80
 
+# define LT_TRUE				1
+# define LT_FALSE				0
+
+# define W_RESIZED				0x1u
+# define H_RESIZED				0x2u
+
 extern t_term				g_term;
 extern int					debug;
 
@@ -233,7 +239,7 @@ void	backspace(t_cmds *cmd);
 /*
 **	string_is_to_large.c
 */
-uint32_t	is_cmd_too_large(t_cmds *cmd);
+uint8_t	is_cmd_bigger_than_screen(t_cmds *cmd);
 
 void	lt_get_cursor_position(uint32_t *x, uint32_t *y);
 

@@ -13,38 +13,29 @@
 
 #include "libterm.h"
 
-extern int	debug;
-
-uint32_t	is_cmd_too_large(t_cmds *cmd)
+uint8_t		is_cmd_bigger_than_screen(t_cmds *cmd)
 {
-	uint32_t	i;
-	uint32_t	j;
-	uint32_t	rem_lines;
-	uint32_t	row_width;
+	uint32_t	x;
+	uint32_t	y;
+	uint32_t	remaining_lines;
+	uint32_t	max_width;
+	uint32_t	line_width;
 
-	rem_lines = g_term.h;
-	j = 0;
-	while (j < cmd->n_row)
+	remaining_lines = g_term.h;
+	y = 0;
+	while (y < cmd->n_row)
 	{
-		if (rem_lines == 0)
+		x = 0;
+		while (x < cmd->len[y])
 		{
-			dprintf(debug, "rem_lines = %u\n", rem_lines);
-			return (1);
+			remaining_lines--;
+			max_width = (x == 0) ? g_term.w - cmd->pad[y] : g_term.w;
+			line_width = get_utf8_string_width2(cmd->line[y] + x, cmd->len[y] - x);
+			if (remaining_lines == 0)
+				return (line_width >= max_width) ? 1 : 0;
+			x += get_utf8_string_size(cmd->line[y] + x, max_width, cmd->len[y] - x);
 		}
-		i = 0;
-		while (i < cmd->len[j])
-		{
-			row_width = (i == 0) ? g_term.w - cmd->pad[j] : g_term.w;
-			i += get_utf8_string_size(cmd->line[j] + i, row_width, cmd->len[j] - i);
-			if (--rem_lines == 0)
-				break ;
-		}
-		if (i < cmd->len[j])
-		{
-			dprintf(debug, "i = %u < %u\n", i, cmd->len[j]);
-			return (1);
-		}
-		j++;
+		y++;
 	}
 	return (0);
 }

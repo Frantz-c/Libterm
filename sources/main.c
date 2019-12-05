@@ -31,98 +31,6 @@ int					debug;
 t_term				g_term;
 
 /*
-**	create the same function with a call to a function pointer in a defined range (for paste)
-*/
-
-/*
-**	print the command but don't care of
-**	the cursor's position after execution
-*/
-/*
-void	print_cmd_from_cursor2(t_cmds *cmd)
-{
-	uint32_t	x;
-	uint32_t	y;
-	uint32_t	lsize;
-	t_pos		ic;
-
-	ic = g_term.curs;
-	if (is_cmd_too_large(cmd))
-	{
-		lt_clear_screen();
-		write(STDOUT_FILENO, "cmd too long", 12);
-		lt_terminal_mode(LT_RESTORE);
-		exit(1);
-	}
-
-	lsize = 0;
-	y = cmd->curs.y;
-	x = g_term.curs.x;
-	if (get_utf8_string_width2(cmd->line[y] + cmd->curs.x, cmd->len[y] - cmd->curs.x) <= g_term.w - x)
-	{
-		lsize = get_utf8_string_size(cmd->line[y] + cmd->curs.x, g_term.w - x, cmd->len[y] - cmd->curs.x);
-		write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
-		dprintf(debug, "print : \"%.*s\"\n", lsize, cmd->line[y] + cmd->curs.x);
-		// créer une fonction
-		if (x == g_term.w - 1)
-		{
-			if (ic.y == g_term.h - 1)
-			{
-				dprintf(debug, "scroll\n");
-				lt_move_col(0);
-				lt_scroll_up();
-				g_term.curs.y--;
-			}
-			else
-			{
-				lt_move_down();
-				ic.y++;
-			}
-		}
-		if (lsize + cmd->curs.x == cmd->len[y])
-			return ;
-	}
-	dprintf(debug, "x >= g_term.w\n");
-	x = cmd->curs.x + lsize;
-	while (1)
-	{
-		// afficher l'excedent sur les lignes suivantes
-		while (x != cmd->len[y])
-		{
-			// créer une fonction
-			if (ic.y == g_term.h - 1)
-			{
-				dprintf(debug, "scroll\n");
-				lt_move_col(0);
-				lt_scroll_up();
-				g_term.curs.y--;
-			}
-			else
-			{
-				lt_move_down();
-				ic.y++;
-			}
-
-			dprintf(debug, "while (%u != %u) : 101  while (x != cmd->len[y])\n", x, cmd->len[y]);
-			if ((lsize = get_utf8_string_size(cmd->line[y] + x, g_term.w, cmd->len[y] - x)) == 0)
-			{
-				dprintf(debug, "BREAK\n");
-				break ;
-			}
-			write(STDOUT_FILENO, cmd->line[y] + x, lsize);
-			x += lsize;
-		}
-		if (++y == cmd->n_row)
-			break ;
-		if (cmd->pad[y])
-			write(STDOUT_FILENO, cmd->prefix[y], cmd->pad[y]); // afficher les messages prefixe ("<quote>, ...")
-		lsize = get_utf8_string_size(cmd->line[y], g_term.w - cmd->pad[y], cmd->len[y]);
-		write(STDOUT_FILENO, cmd->line[y] + cmd->curs.x, lsize);
-	}
-}
-*/
-
-/*
 **	insert character
 */
 void	insert_char_from_cursor(t_cmds *cmd, const char *c, uint32_t csize)
@@ -137,95 +45,6 @@ void	insert_char_from_cursor(t_cmds *cmd, const char *c, uint32_t csize)
 	}
 	memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, c, csize);
 	cmd->len[cmd->curs.y] += csize;
-}
-
-void	print_cmd(t_cmds *cmd)
-{
-//	uint32_t	nlines;
-	uint32_t	line_width;
-	uint32_t	line_size;
-	uint32_t	line_start;
-	uint32_t	i;
-	uint32_t	j;
-	uint32_t	k;
-
-	i = 0;
-	k = 0;
-	while (i < cmd->n_row)
-	{
-//		nlines = ((cmd->len[i] + plen) / g_term.w)
-//				+ ((cmd->len[i] + plen) % g_term.w);
-		line_start = 0;
-		j = 0;
-		while (line_start < cmd->len[i])
-		{
-			(j == 0) ? lt_move_cursor(cmd->pad[i], cmd->origin_y + k) :
-						lt_move_cursor(0, cmd->origin_y + j + k);
-			line_width = (j == 0) ? g_term.w - cmd->pad[i] : g_term.w;
-			line_size = get_utf8_string_size(cmd->line[i] + line_start,
-										line_width, cmd->len[i] - line_start);
-			lt_clear_end_of_line();
-			write(STDOUT_FILENO, cmd->line[i] + line_start, line_size);
-			line_start += line_size;
-			j++;
-		}
-		k += j;
-		i++;
-	}
-	lt_move_cursor(g_term.curs.x, g_term.curs.y);
-}
-
-void	print_cmd_from_cursor(t_cmds *cmd)
-{
-	uint32_t	line_width;
-	uint32_t	line_size;
-	uint32_t	line_start;
-	uint32_t	i;
-	uint32_t	j;
-	uint32_t	k;
-
-	i = cmd->curs.y;
-	k = 0;
-	while (i < cmd->n_row)
-	{
-		line_start = (i == 0) ? cmd->curs.x : 0;
-		j = 0;
-		while (line_start < cmd->len[i])
-		{
-			(j == 0) ? lt_move_cursor(cmd->pad[i], cmd->origin_y + k) :
-						lt_move_cursor(0, cmd->origin_y + j + k);
-			line_width = (j == 0) ? g_term.w - cmd->pad[i] : g_term.w;
-			line_size = get_utf8_string_size(cmd->line[i] + line_start,
-										line_width, cmd->len[i] - line_start);
-			lt_clear_end_of_line();
-			write(STDOUT_FILENO, cmd->line[i] + line_start, line_size);
-			line_start += line_size;
-			j++;
-		}
-		k += j;
-		i++;
-	}
-	lt_move_cursor(g_term.curs.x, g_term.curs.y);
-
-}
-/*
-void	print_cmd_region()
-{
-	
-}
-*/
-void	move_cursors_right(t_cmds *cmd, uint8_t width, uint8_t size)
-{
-	cmd->curs.x += size;
-	g_term.curs.x += width;
-	lt_move_n_right(width);
-}
-
-void	move_cursors_left(t_cmds *cmd, uint8_t width, uint8_t size)
-{
-	cmd->curs.x -= size;
-	g_term.curs.x -= width;
-	lt_move_n_left(width);
 }
 
 void	free_cmd(t_cmds *cmd)
@@ -281,66 +100,7 @@ int		pasted_text(const char buf[], uint32_t len)
 		return (1);
 	return (0);
 }
-/*
-void	paste(char buf[], uint32_t len, t_cmds *cmd)
-{
-	char		tmp[8];
-	uint32_t	i;
-	uint8_t		end;
-	uint32_t	paste_pos;
 
-	end = 0;
-	paste_pos = cmd->curs.x;
-	cmd->pasted_byte = cmd->curs.x;
-	cmd->pasted_pos = g_term.curs.x;
-
-	// if buf == "\e[200~"
-	if (len == 0)
-		len = read(STDIN_FILENO, buf, READ_LEN - strlen(PASTE_START));
-
-	while (1)
-	{
-		i = len - 1;
-		while (i != 0xffffffffu)
-		{
-			if (buf[i] == '\e')
-			{
-				if (memcmp(PASTE_END, buf + i, strlen(PASTE_END)) == 0)
-				{
-					if (i != 0)
-					{
-						nalloc_if_needed(cmd, i);
-						memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, buf, i);
-						cmd->len[cmd->curs.y] += i;
-						cmd->curs.x += i;
-					}
-					end = 1;
-					break ;
-				}
-			}
-			i--;
-		}
-		if (end == 1)
-		{
-			lt_set_video_mode(LT_REVERSE);
-			write(STDOUT_FILENO,
-				cmd->line[cmd->curs.y] + paste_pos,
-				cmd->len[cmd->curs.y] - paste_pos
-			);
-			lt_reset_color();
-			g_term.curs.x += cmd->curs.x - paste_pos;
-			break ;
-		}
-		nalloc_if_needed(cmd, len);
-		memcpy(cmd->line[cmd->curs.y] + cmd->curs.x, buf, len);
-		cmd->len[cmd->curs.y] += len;
-		cmd->curs.x += len;
-
-		len = read(STDIN_FILENO, buf, READ_LEN - strlen(PASTE_START));
-	}
-	cmd->pasted = 1;
-}
-*/
 void	write_char_to_cmd(t_cmds *cmd, const char *c, uint32_t csize)
 {
 	uint32_t	width;
@@ -458,8 +218,28 @@ void	get_user_cmd(t_cmds *cmd)
 
 void	put_sigwinch(int sig)
 {
-	//printf(" { window resized }\n");
+	uint8_t		resized;
+	t_2ddim		new_size;
+
+	new_size.w = g_term.w;
+	new_size.h = g_term.h;
 	lt_get_terminal_size(&g_term);
+	if (new_size.w != g_term.w)	
+		resized |= W_RESIZED;
+	if (new_size.h != g_term.h)
+		resized |= H_RESIZED;
+	new_size.w = g_term.w - new_size.w;
+	new_size.h = g_term.h - new_size.h;
+
+	if (resized & H_RESIZED)
+	{
+		g_term.curs.y += new_size.h;
+		if (g_term.curs.y > 0x7ffffffu)
+			g_term.curs.y = 0;
+	}
+	lt_move_cursor(g_term.curs.x, g_term.curs.y);
+//	print_prompt_without_interpretation();
+//	print_cmd_from_cursor();
 }
 
 void	put_sig(int sig)

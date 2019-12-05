@@ -1,81 +1,68 @@
-(1)print: "j"
+(1)print: "t"
 
 
-lt_move_cursor(19, 11)
-(1)print: "e"
-
-
-lt_move_cursor(20, 11)
-(1)print: " "
-
-
-lt_move_cursor(21, 11)
-(1)print: "s"
-
-
-lt_move_cursor(22, 11)
-(1)print: "u"
-
-
-lt_move_cursor(23, 11)
+lt_move_cursor(19, 25)
 (1)print: "i"
 
 
-lt_move_cursor(24, 11)
-(1)print: "s"
+lt_move_cursor(20, 25)
+(1)print: "t"
 
 
-lt_move_cursor(25, 11)
+lt_move_cursor(21, 25)
+(1)print: "i"
+
+
+lt_move_cursor(22, 25)
+(1)print: "t"
+
+
+lt_move_cursor(19, 27)
+(1)print: "o"
+
+
+lt_move_cursor(20, 27)
+(1)print: "t"
+
+
+lt_move_cursor(21, 27)
+(1)print: "o"
+
+
+lt_move_cursor(22, 27)
+(1)print: "t"
+
+
+lt_move_cursor(19, 39)
+(1)print: "a"
+
+
+lt_move_cursor(20, 39)
+(1)print: "t"
+
+
+lt_move_cursor(21, 39)
+(1)print: "a"
+
+
+lt_move_cursor(22, 39)
 (1)print: " "
 
 
-lt_move_cursor(26, 11)
-(1)print: "f"
+lt_move_cursor(23, 9)
+(1)print: "t"
 
 
-lt_move_cursor(27, 11)
-(1)print: "c"
+lt_move_cursor(24, 9)
+(1)print: "i"
 
 
-lt_move_cursor(28, 11)
-(1)print: "o"
+lt_move_cursor(25, 9)
+(1)print: "t"
 
 
-lt_move_cursor(29, 11)
-(1)print: "r"
+lt_move_cursor(26, 9)
+(1)print: "i"
 
 
-lt_move_cursor(30, 11)
-(1)print: "d"
-
-
-lt_move_cursor(31, 11)
-(1)print: "o"
-
-
-lt_move_cursor(32, 11)
-(1)print: "n"
-
-
-lt_move_cursor(33, 11)
-(1)print: " je suis fcordon"
-
-
-lt_move_cursor(19, 11)
-if (y{0} == cmd->pasted_end.y{7} && (cmd->curs.x{0} + lsize{38}){38} > cmd->pasted_end.x{22})
-<<>>: x = 38, cmd->len[0] = 38
-x = 22
-<<>>: x = 22, cmd->len[1] = 22
-x = 22
-<<>>: x = 22, cmd->len[2] = 22
-x = 22
-<<>>: x = 22, cmd->len[3] = 22
-x = 22
-<<>>: x = 22, cmd->len[4] = 22
-x = 22
-<<>>: x = 22, cmd->len[5] = 22
-x = 22
-<<>>: x = 22, cmd->len[6] = 22
-x = 38
-<<>>: x = 38, cmd->len[7] = 38
-++y == cmd->n_row
+lt_move_cursor(27, 9)
